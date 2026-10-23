@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>PRIOR · El futuro se practica.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231B2A4A'/%3E%3Ccircle cx='32' cy='38' r='11' fill='%23E8A33D'/%3E%3Crect x='10' y='38' width='44' height='16' fill='%231B2A4A'/%3E%3Crect x='10' y='37' width='44' height='2.5' fill='%237FB3D5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --principal:#1B2A4A; --acento:#E8A33D; --cielo:#7FB3D5; --arena:#E6DFD3;
+  --texto:#16213A; --texto2:#5B6475; --fondo:#F7F3EA; --tarjeta:#FFFFFF;
+  --sobre-principal:#F7F3EA; --sol:#E8A33D;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --principal:#8EC3E6; --acento:#F0B24E; --cielo:#4F7396; --arena:#2A3550;
+    --texto:#F2EDE3; --texto2:#A9B1C1; --fondo:#0F1A2E; --tarjeta:#18243B;
+    --sobre-principal:#0F1A2E; --sol:#F0B24E;
+    color-scheme: dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--fondo); color:var(--texto);
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.app{
+  max-width:460px; margin:0 auto; min-height:100%;
+  display:flex; flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 24px) 24px calc(env(safe-area-inset-bottom,0px) + 32px);
+}
+h1,h2,.marca{font-family:"Plus Jakarta Sans", Inter, system-ui, sans-serif;}
+.marca{font-weight:800; letter-spacing:.14em; font-size:15px; color:var(--principal);}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--cielo); outline-offset:2px; border-radius:12px}
+
+/* Horizonte: barra de progreso con sol que sube */
+.horizonte{position:relative; height:46px; margin:20px 0 10px}
+.horizonte .linea{position:absolute; left:0; right:0; bottom:10px; height:2px; background:var(--arena)}
+.horizonte .avance{position:absolute; left:0; bottom:10px; height:2px; background:var(--cielo); transition:width .5s ease}
+.horizonte .sol{position:absolute; width:22px; height:22px; border-radius:50%; background:var(--sol);
+  transform:translate(-50%, 0); transition:left .5s ease, bottom .5s ease}
+.horizonte .paso{position:absolute; right:0; top:0; font-size:13px; color:var(--texto2)}
+.bloque{font-size:14px; color:var(--texto2); font-weight:500}
+
+/* Guía */
+.guia{display:flex; flex-direction:column; gap:14px; margin:28px 0 8px}
+.burbuja{
+  background:var(--tarjeta); border:1px solid var(--arena); border-radius:4px 18px 18px 18px;
+  padding:16px 18px; max-width:92%; min-height:1.6em;
+}
+.burbuja.pregunta{font-weight:600}
+.cursor::after{content:"▍"; color:var(--acento); animation:parpadeo 1s steps(1) infinite}
+@keyframes parpadeo{50%{opacity:0}}
+.saltar{font-size:13px; color:var(--texto2); background:none; border:0; padding:4px 0; align-self:flex-start}
+
+/* Opciones */
+.opciones{display:flex; flex-direction:column; gap:12px; margin-top:26px}
+.opcion{
+  display:flex; gap:12px; align-items:flex-start; text-align:left;
+  background:transparent; border:1.5px solid var(--arena); border-radius:16px; padding:16px 16px;
+  transition:border-color .15s, background .15s;
+}
+.opcion .letra{flex:0 0 26px; height:26px; border-radius:50%; display:grid; place-items:center;
+  font-size:13px; font-weight:600; background:var(--arena); color:var(--texto)}
+.opcion:hover{border-color:var(--cielo)}
+.opcion[aria-pressed="true"]{border-color:var(--principal); background:var(--tarjeta)}
+.opcion[aria-pressed="true"] .letra{background:var(--principal); color:var(--sobre-principal)}
+.opcion:disabled{cursor:default}
+.opcion:disabled:not([aria-pressed="true"]){opacity:.45}
+.oculto{display:none !important}
+
+.consecuencia{
+  margin-top:24px; padding:14px 16px; border-left:3px solid var(--acento);
+  background:var(--tarjeta); border-radius:0 12px 12px 0; font-size:15px;
+}
+.consecuencia b{font-weight:600}
+
+/* Botones */
+.acciones{margin-top:auto; padding-top:36px; display:flex; flex-direction:column; gap:10px}
+.btn{
+  border:0; border-radius:14px; padding:15px 18px; font-weight:600; font-size:16px;
+  background:var(--principal); color:var(--sobre-principal);
+}
+.btn:disabled{opacity:.35; cursor:default}
+.btn.secundario{background:transparent; color:var(--principal); border:1.5px solid var(--arena)}
+.btn.texto{background:none; color:var(--texto2); font-weight:500; padding:8px}
+
+/* Bienvenida */
+.portada{flex:1; display:flex; flex-direction:column; justify-content:center}
+.escena{position:relative; height:150px; margin:10px 0 26px}
+.escena .sol-grande{position:absolute; left:50%; bottom:28px; width:96px; height:96px; border-radius:50%;
+  background:var(--sol); transform:translate(-50%, 60%); animation:amanecer 1.6s cubic-bezier(.2,.7,.2,1) .2s forwards}
+.escena .mar{position:absolute; left:0; right:0; bottom:0; height:30px; background:var(--fondo)}
+.escena .linea{position:absolute; left:0; right:0; bottom:29px; height:2px; background:var(--cielo)}
+@keyframes amanecer{to{transform:translate(-50%, 0)}}
+.lema{font-size:34px; line-height:1.12; font-weight:800; margin:0 0 10px; color:var(--principal)}
+.sublema{color:var(--texto2); margin:0}
+
+/* Resultado */
+.titulo{font-size:26px; line-height:1.2; font-weight:800; margin:18px 0 8px; color:var(--principal)}
+.mezcla{display:flex; flex-direction:column; gap:24px; margin:30px 0 8px}
+.materia .fila{display:flex; justify-content:space-between; align-items:baseline}
+.materia .nombre{font-weight:600}
+.materia .pct{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; font-size:22px; color:var(--principal)}
+.barra{height:10px; border-radius:6px; background:var(--arena); overflow:hidden; margin:6px 0 6px}
+.barra i{display:block; height:100%; width:0; background:var(--principal); border-radius:6px; transition:width 1s cubic-bezier(.2,.7,.2,1)}
+.materia.primera .barra i{background:var(--acento)}
+.materia p{margin:0; color:var(--texto2); font-size:14.5px}
+.creencias{margin-top:22px; padding:16px; border:1.5px dashed var(--arena); border-radius:14px}
+.creencias h2{font-size:16px; margin:0 0 8px}
+.creencias ul{margin:0; padding-left:18px}
+.creencias li{margin:4px 0}
+.nota{font-size:13px; color:var(--texto2); margin-top:14px}
+
+/* Cuenta */
+.btn.google{background:var(--tarjeta); color:var(--texto); border:1.5px solid var(--arena)}
+.aviso-demo{font-size:13px; color:var(--texto2); text-align:center; min-height:1.4em}
+
+/* Lección */
+.cabecera{display:flex; justify-content:space-between; align-items:center}
+.criterio-total{font-size:14px; font-weight:600; color:var(--principal)}
+.momento{font-size:14px; color:var(--texto2); font-weight:500; margin-top:6px}
+/* Criterio: un sello tranquilo dentro del flujo, no una notificación */
+.sello{display:flex; align-items:center; gap:12px; margin-top:22px; padding:12px 16px;
+  border:1px solid var(--arena); border-radius:14px; width:fit-content; max-width:100%;
+  background:var(--tarjeta); animation:sello .5s cubic-bezier(.2,.7,.2,1) both}
+.sello .sol-mini{flex:0 0 18px; height:18px; border-radius:50%; background:var(--sol); box-shadow:0 0 0 4px color-mix(in srgb, var(--sol) 22%, transparent)}
+.sello b{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; color:var(--principal); font-size:15px; white-space:nowrap}
+.sello span{color:var(--texto2); font-size:14px}
+@keyframes sello{from{opacity:0; transform:translateY(6px)}}
+.criterio-total{display:flex; align-items:center; gap:8px}
+.criterio-total::before{content:""; width:10px; height:10px; border-radius:50%; background:var(--sol)}
+.criterio-total.sube{animation:sube .6s ease}
+@keyframes sube{40%{transform:scale(1.12)}}
+/* Concepto: lo que la persona se lleva de cada pantalla de teoría */
+.concepto{margin-top:22px; padding:18px 18px 16px; border-radius:16px; background:var(--principal); color:var(--sobre-principal)}
+.concepto small{display:block; font-size:13px; opacity:.8; margin-bottom:4px}
+.concepto h3{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-size:19px; margin:0 0 6px}
+.concepto p{margin:0; font-size:15px; opacity:.95}
+.aprendido{margin:14px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px}
+.aprendido li{padding:12px 14px; border:1px solid var(--arena); border-radius:14px; background:var(--tarjeta)}
+.aprendido b{display:block; font-family:"Plus Jakarta Sans", Inter, sans-serif}
+.aprendido span{font-size:14px; color:var(--texto2)}
+.subtitulo{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-size:17px; margin:30px 0 0; color:var(--principal)}
+.tarjeta{background:var(--tarjeta); border:1px solid var(--arena); border-radius:16px; padding:16px 18px; margin-top:20px}
+.tarjeta h3{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-size:16px; margin:0 0 4px}
+.tarjeta p{margin:0; color:var(--texto2); font-size:15px}
+.vermas{background:none; border:0; color:var(--principal); font-weight:600; padding:8px 0; text-align:left}
+.monedas{display:grid; grid-template-columns:repeat(10,1fr); gap:5px; margin:14px 0 6px; max-width:300px}
+.monedas i{aspect-ratio:1; border-radius:50%; background:var(--cielo); transition:background .3s, transform .3s}
+.monedas i.encajada{background:var(--arena); transform:scale(.8)}
+.leyenda{font-size:13px; color:var(--texto2)}
+.slider{margin:24px 0 6px}
+.slider label{display:flex; justify-content:space-between; font-size:15px; font-weight:500}
+.slider input{width:100%; accent-color:var(--principal); margin-top:6px}
+.cifra{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; font-size:28px; color:var(--principal); margin:10px 0 0}
+.formula{font-size:13px; color:var(--texto2)}
+.barras{display:flex; flex-direction:column; gap:18px; margin-top:22px}
+.barras .fila{display:flex; justify-content:space-between; font-size:14.5px}
+.barras .tuya .barra i{background:var(--acento)}
+.barras .barra{position:relative}
+.barras .barra .marca-uno{position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--texto2)}
+.fuente{font-size:12.5px; color:var(--texto2); margin-top:12px}
+textarea{width:100%; min-height:90px; font:inherit; color:var(--texto); background:var(--tarjeta);
+  border:1.5px solid var(--arena); border-radius:14px; padding:12px 14px; margin-top:12px; resize:vertical}
+.pregunta-chica{font-weight:600; margin:18px 0 0}
+.lista{margin:10px 0 0; padding-left:20px}
+.lista li{margin:6px 0}
+.desglose{margin:18px 0 0; padding:0; list-style:none}
+.desglose li{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--arena); font-size:15px}
+
+/* Cuenta */
+.campo{display:flex; flex-direction:column; gap:6px; margin-top:18px; font-size:15px; font-weight:500}
+.campo input{font:inherit; font-weight:400; color:var(--texto); background:var(--tarjeta); border:1.5px solid var(--arena);
+  border-radius:14px; padding:14px 16px}
+.campo input:focus{border-color:var(--cielo); outline:none}
+.error{color:#B4462F; font-size:14px; min-height:1.4em; margin-top:12px}
+@media (prefers-color-scheme: dark){ .error{color:#F2A38F} }
+.privacidad{font-size:13px; color:var(--texto2); margin-top:16px}
+.codigo{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; font-size:22px; color:var(--principal); letter-spacing:.06em}
+/* Otra respuesta (abierta): sirve para descubrir arquetipos nuevos */
+.opcion.otra{border-style:dashed}
+.opcion.otra .letra{background:transparent; color:var(--texto2); border:1.5px dashed var(--texto2)}
+.abierta{margin-top:14px}
+.abierta .btn{margin-top:12px; width:100%}
+/* Momento de Criterio: la pantalla se difumina y sale el sol */
+.celebra{position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:24px;
+  background:color-mix(in srgb, var(--fondo) 60%, transparent);
+  -webkit-backdrop-filter:blur(9px); backdrop-filter:blur(9px);
+  opacity:0; transition:opacity .35s ease; cursor:pointer}
+.celebra.ver{opacity:1}
+.celebra .caja{text-align:center; max-width:300px}
+.celebra .cielo-mini{position:relative; width:140px; height:78px; margin:0 auto 18px; overflow:hidden}
+.celebra .cielo-mini i{position:absolute; left:50%; bottom:0; width:64px; height:64px; border-radius:50%; background:var(--sol);
+  transform:translate(-50%, 100%); transition:transform .8s cubic-bezier(.2,.7,.2,1) .1s}
+.celebra.ver .cielo-mini i{transform:translate(-50%, 30%)}
+.celebra .cielo-mini b{position:absolute; left:0; right:0; bottom:0; height:2px; background:var(--cielo)}
+.celebra .cuanto{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; font-size:30px; color:var(--principal); line-height:1.15}
+.celebra .porque{color:var(--texto2); margin-top:6px; font-size:16px}
+
+.cuenta{height:3px; border-radius:3px; background:var(--arena); overflow:hidden; margin-bottom:6px}
+.cuenta i{display:block; height:100%; width:0; background:var(--acento); transition:width linear}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important; transition:none !important}
+  .escena .sol-grande{transform:translate(-50%,0)}
+}
+</style>
+</head>
+<body>
+<main class="app" id="app" aria-live="polite"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+
+<script>
+/* ---------- Contenido: diagnóstico v4 borrador (21 oct 2026), sobre la v3 del banco de escenarios ---------- */
+// Cambios v4: situaciones hipotéticas ("Imagina que..."), sin urgencia ni nombres de plataformas,
+// opción de ahorrar en dólares donde aplica, variantes según la moneda en que cobra la persona,
+// y un escenario nuevo sobre cómo se vive la devaluación (C4).
+// Puntos de necesidad: [Economía, Finanzas, Conducta]. Los máximos se calculan solos según las variantes que vio cada persona.
+const PERFIL_PREGUNTAS = [
+  { clave:"edad", pregunta:"¿Cuántos años tienes?", opciones:["18 a 24","25 a 34","35 a 44","45 o más"] },
+  { clave:"moneda", pregunta:"¿En qué recibes la mayor parte de lo que ganas?",
+    opciones:["Bolívares","Dólares en efectivo","Dólares en una cuenta o billetera digital","USDT u otra cripto","Una mezcla"] }
+];
+const MONEDA_TEXTO = { "Bolívares":"bolívares", "Dólares en efectivo":"dólares en efectivo",
+  "Dólares en una cuenta o billetera digital":"dólares en una cuenta o billetera digital",
+  "USDT u otra cripto":"USDT", "Una mezcla":"bolívares y dólares" };
+const grupoMoneda = m => (m === "Bolívares" || m === "Una mezcla") ? "bs" : "usd";
+
+const ESCENARIOS = [
+  { id:"E1", bloque:"Economía", dogma:"El efectivo en dólares es el refugio",
+    contexto:"Imagina que vendes algo usado por el equivalente a 100 dólares. El comprador puede pagarte hoy en bolívares a la tasa oficial del BCV, o en dólares dentro de una semana. La tasa del mercado está por encima de la oficial.",
+    pregunta:"¿Qué haces?",
+    opciones:[
+      ["Acepto los bolívares hoy y los uso en lo que necesito","Si después pagas cosas a tasa de mercado, pierdes la diferencia entre las dos tasas.",[2,1,1]],
+      ["Acepto los bolívares hoy y los cambio a dólares para ahorrarlos","Cambias a tasa de mercado y pagas el costo del cambio: terminas con menos de 100 dólares.",[1,1,2]],
+      ["Espero la semana y cobro en dólares","El trato se puede caer, y pasas una semana sin el dinero.",[1,1,2]],
+      ["Le propongo que me pague en bolívares a la tasa del mercado","La negociación puede enfriar la venta.",[0,1,1]] ] },
+  { id:"E2", bloque:"Economía", dogma:"Gastar todo apenas cobras, por si acaso",
+    variantes:{
+      bs:{ contexto:"Imagina que hoy es tu día de cobro y te pagan en bolívares. Los precios suben un poco cada semana.",
+        pregunta:"¿Qué haces con lo que no vas a gastar esta semana?",
+        opciones:[
+          ["Lo gasto de una vez en lo del mes, antes de que suba","Compras de más y te quedas sin colchón para imprevistos.",[1,2,2]],
+          ["Lo cambio a dólares y lo ahorro","Te cubres si sube el dólar; si los precios suben más que la tasa, ese ahorro también compra menos.",[1,1,2]],
+          ["Lo dejo en la cuenta y lo voy usando","Pierde poder de compra mientras espera.",[3,1,1]],
+          ["Pago lo fijo y reparto el resto entre bolívares y dólares","Cada cambio cuesta, y hay que estar pendiente de las dos monedas.",[1,1,0]] ] },
+      usd:{ contexto:"Imagina que hoy es tu día de cobro y te pagan en {moneda}. Muchos de tus gastos son en bolívares y los precios suben un poco cada semana.",
+        pregunta:"¿Cómo manejas lo del mes?",
+        opciones:[
+          ["Cambio todo a bolívares hoy y pago todo de una vez","Los bolívares que no gastas enseguida pierden valor.",[2,1,1]],
+          ["Cambio a bolívares solo lo de cada semana","Más vueltas y más costos de cambio.",[0,1,0]],
+          ["Ahorro todo en dólares y cambio solo cuando no me queda otra","Puedes terminar cambiando cuando la tasa te conviene menos.",[1,1,2]],
+          ["Pago en dólares donde me lo acepten, aunque el precio sea más alto","El precio en dólares a veces es más caro que en bolívares a la tasa del día.",[2,1,1]] ] } } },
+  { id:"E3", bloque:"Economía", dogma:"Lo de hoy vale más, aunque cueste mañana",
+    contexto:"Imagina que necesitas cambiar un electrodoméstico de 600 USD. Puedes pagarlo de contado o en tres cuotas sin intereses.",
+    pregunta:"¿Qué haces?",
+    opciones:[
+      ["Lo pago de contado: prefiero no deber","Tus ahorros bajan de golpe y quedas con menos colchón.",[2,1,2]],
+      ["Cuotas, y mis ahorros se quedan guardados en dólares","Pagas lo mismo, pero ese ahorro no genera nada mientras tanto.",[1,1,1]],
+      ["Cuotas, y pongo mis ahorros donde generen algo mientras pago","Si eso baja o no lo puedes sacar a tiempo, se complican las cuotas.",[0,1,0]],
+      ["Cuotas, y con lo ahorrado compro otra cosa que necesitaba","Quedas con dos compromisos a la vez.",[2,2,3]] ] },
+  { id:"F1", bloque:"Finanzas", dogma:"Si a otros les funciona, a mí también",
+    contexto:"Imagina que desde este mes te sobran 100 USD cada mes.",
+    pregunta:"¿Qué harías con ellos?",
+    opciones:[
+      ["Los ahorraría en dólares hasta saber qué hacer","No pierdes contra la tasa, pero no generan nada y el dólar también pierde poder de compra.",[1,2,2]],
+      ["Los pondría donde me recomiende alguien que ya invierte","Dependes de lo que otro sabe o cree saber.",[0,2,3]],
+      ["Todavía no tengo claro dónde ponerlos","El dinero se queda quieto mientras decides.",[1,3,0]],
+      ["Los repartiría entre ahorro y algo que dé rendimiento","Tienes que entender el riesgo de cada parte.",[0,1,0]] ] },
+  { id:"F2", bloque:"Finanzas", dogma:"Invertir es peligroso, o es copiar al que le va bien",
+    contexto:"Imagina que alguien cercano te cuenta que compró acciones en la Bolsa de Valores de Caracas a través de una casa de bolsa (empresa autorizada para comprar y vender acciones por ti), y que este año le ha ido bien.",
+    pregunta:"¿Qué piensas?",
+    opciones:[
+      ["Prefiero no meterme: pueden bajar y no recuperar lo que puse","Te quedas fuera de una opción que no conoces.",[2,2,2]],
+      ["Me interesa, pero tendría que averiguar cómo funciona","Mientras averiguas, no decides.",[1,3,0]],
+      ["Compraría las mismas acciones que compró esa persona","Copias sin saber por qué subieron ni cuándo salir.",[1,2,3]],
+      ["Me interesa, y repartiría entre varias acciones","Más comisiones y más tiempo para entender cada una.",[1,1,0]] ] },
+  { id:"F3", bloque:"Finanzas", dogma:"El efectivo como refugio, o todo a una sola apuesta",
+    contexto:"Imagina que recibes un ingreso extra de 500 USD.",
+    pregunta:"¿Cómo lo repartes?",
+    opciones:[
+      ["Lo ahorro en dólares en efectivo","No genera nada, y hay riesgo de robo o pérdida.",[1,2,3]],
+      ["Lo pongo todo en algo que creo que va a subir","Si baja, lo pierdes todo junto.",[1,3,2]],
+      ["Una parte para emergencias y el resto en dos o tres cosas distintas","Cada parte rinde poco y hay que estar pendiente de varias.",[0,1,0]],
+      ["Lo uso para adelantar deudas o cuotas","Te quitas compromisos, pero te quedas sin colchón.",[1,2,1]] ] },
+  { id:"C1", bloque:"Conducta y sociedad", dogma:"El efectivo en dólares es el refugio",
+    contexto:"Imagina que tienes ahorros en dólares en efectivo guardados en casa desde hace un par de años. Alguien te pregunta por qué no los mueves.",
+    pregunta:"¿Qué le respondes?",
+    opciones:[
+      ["Es lo más seguro: lo que está en mi casa nadie me lo quita","Pierden valor cada año (el dólar también tiene inflación) y pueden robarse.",[1,2,3]],
+      ["Sé que pierden valor, pero no confío en otra opción","Pagas un costo seguro por miedo a uno posible.",[1,2,2]],
+      ["Son para emergencias: los quiero a la mano","Probablemente es más de lo que una emergencia necesita.",[1,1,1]],
+      ["Los movería, pero espero a que la situación esté más clara","La situación casi nunca está del todo clara.",[1,1,3]] ] },
+  { id:"C4", bloque:"Conducta y sociedad", dogma:"Cuando sube el dólar, hay que correr",
+    contexto:"Imagina que esta semana el dólar oficial sube 5%.",
+    pregunta:"¿Qué es lo primero que piensas?",
+    opciones:[
+      ["Que tengo que cambiar mis bolívares ya, antes de que suba más","Si todos piensan igual, esa demanda empuja la tasa, y cambias cerca del pico.",[1,1,3]],
+      ["Que los precios van a subir pronto","Suele pasar, pero no en la misma medida ni al mismo tiempo.",[1,1,1]],
+      ["Que me afecta poco, porque cobro o ahorro en dólares","Los precios en bolívares también suben, y tu dólar compra menos aquí.",[2,1,2]],
+      ["Miraría cuánto subieron los precios en ese mismo tiempo","Necesitas el dato de precios, y no siempre está a la mano.",[0,0,1]] ] },
+  { id:"C2", bloque:"Conducta y sociedad", dogma:"Esperar es la mejor defensa",
+    contexto:"Piensa en algo de tu dinero que llevas un tiempo queriendo ordenar: ahorrar, invertir o salir de una deuda.",
+    pregunta:"¿Qué es lo que más te frena?",
+    opciones:[
+      ["La economía está muy incierta; espero a que se estabilice","La espera también tiene costo.",[2,1,3]],
+      ["Me falta saber más antes de dar el paso","Mientras aprendes, no decides.",[1,3,1]],
+      ["No tengo suficiente dinero para que valga la pena","Empezar con poco también enseña.",[1,2,2]],
+      ["Nada en particular: ya empecé","Lo siguiente es revisar si lo que hiciste te sigue conviniendo.",[0,1,0]] ] },
+  { id:"C3", bloque:"Conducta y sociedad", tipo:"dos_pasos", dogma:"Sé manejar mi dinero",
+    contexto:"Imagina que inviertes 100 USD. El primer año sube 10% y el segundo año baja 10%.",
+    pregunta:"¿Con cuánto te quedas?",
+    paso1:["100 USD","99 USD","101 USD","No estoy seguro"], correcta:1, maximo:[0,3,3],
+    pregunta2:"¿Qué tan seguro estás de tu respuesta?",
+    paso2:["Muy seguro","Algo seguro","Estoy adivinando"],
+    explicacion:"Subir 10% y luego bajar 10% no te deja igual: 100 sube a 110, y el 10% de 110 son 11, así que quedas en 99." }
+];
+const LETRAS = ["A","B","C","D","E"];
+const MATERIAS = [
+  { nombre:"Economía", frase:"Cómo la inflación, las tasas y el tipo de cambio mueven el dinero que ganas." },
+  { nombre:"Finanzas", frase:"Qué hacer con lo que te sobra: riesgo, rendimiento y cómo repartir." },
+  { nombre:"Conducta y sociedad", frase:"Las creencias de la crisis que todavía deciden por ti." }
+];
+
+/* ---------- Conexión con Supabase ---------- */
+// Pega aquí la URL del proyecto y la clave pública (anon o publishable). Nunca la clave service_role.
+const SUPABASE_URL = "https://lhwajunwenugsmpuonyx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_teUafx3VaEPWDXm43SD9-g_1910NoJj";
+const sb = (SUPABASE_URL && SUPABASE_KEY && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+const REF = new URLSearchParams(location.search).get("ref");   // código de quien invitó
+let usuario = null;
+if (sb) sb.auth.getSession().then(({data}) => { usuario = data.session?.user || null; });
+
+const traducirError = (m="") =>
+  /already registered/i.test(m) ? "Ese correo ya tiene cuenta. Toca “Ya tengo cuenta”." :
+  /invalid login/i.test(m) ? "Correo o contraseña incorrectos." :
+  /password/i.test(m) ? "La contraseña debe tener al menos 6 caracteres." :
+  /email/i.test(m) ? "Revisa que el correo esté bien escrito." :
+  /fetch|network/i.test(m) ? "No hay conexión. Revisa tu internet e inténtalo otra vez." :
+  "No se pudo completar. Inténtalo otra vez.";
+
+async function guardarDiagnostico(){
+  if (!sb || !usuario) return;
+  const { error } = await sb.from("diagnostico_resultados").insert({
+    user_id: usuario.id, correo: usuario.email, perfil: estado.perfil, respuestas: estado.respuestas,
+    puntos: estado.puntos, maximos: estado.maximos, mezcla: estado.mezcla, creencias: estado.creencias, invitado_por: REF });
+  if (error) console.error("No se guardó el diagnóstico:", error.message);
+}
+async function guardarLeccion(){
+  if (!sb || !usuario) return;
+  const { error } = await sb.from("leccion_resultados").insert({
+    user_id: usuario.id, correo: usuario.email, leccion: "E1", criterio: L.criterio, desglose: L.desglose,
+    datos: L.datos, duracion_seg: Math.round((Date.now() - (L.inicio || Date.now())) / 1000) });
+  if (error) console.error("No se guardó la lección:", error.message);
+}
+
+/* ---------- Estado ---------- */
+const estado = { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], perfil:{} };
+const app = document.getElementById("app");
+const reducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- Utilidades ---------- */
+const el = (tag, attrs={}, ...hijos) => {
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const h of hijos) if (h != null) n.append(h);
+  return n;
+};
+
+// Burbujas que se escriben una a una; un toque las completa todas.
+function escribir(contenedor, textos, alTerminar){
+  let saltado = false, timers = [];
+  const burbujas = textos.map(t => {
+    const b = el("div", {class:"burbuja" + (t.clase ? " " + t.clase : "")});
+    b.dataset.texto = t.texto; return b;
+  });
+  const boton = el("button", {class:"saltar", type:"button"}, "Toca para ver todo");
+  const completar = () => {
+    if (saltado) return; saltado = true; timers.forEach(clearTimeout);
+    burbujas.forEach(b => { if (!b.isConnected) contenedor.append(b); b.textContent = b.dataset.texto; b.classList.remove("cursor"); });
+    boton.remove(); alTerminar && alTerminar();
+  };
+  boton.addEventListener("click", completar);
+  contenedor.addEventListener("click", completar, {once:true});
+  if (reducido) { contenedor.append(...burbujas); completar(); return; }
+  contenedor.after(boton);
+  let k = 0;
+  const siguiente = () => {
+    if (saltado) return;
+    if (k >= burbujas.length) { saltado = true; boton.remove(); alTerminar && alTerminar(); return; }
+    const b = burbujas[k++], txt = b.dataset.texto; contenedor.append(b); b.classList.add("cursor");
+    let j = 0;
+    const tecla = () => {
+      if (saltado) return;
+      b.textContent = txt.slice(0, ++j);
+      if (j < txt.length) timers.push(setTimeout(tecla, 16));
+      else { b.classList.remove("cursor"); timers.push(setTimeout(siguiente, 320)); }
+    };
+    tecla();
+  };
+  siguiente();
+}
+
+function horizonte(paso, total){
+  const f = paso / total;
+  const sol = el("div", {class:"sol"});
+  const avance = el("div", {class:"avance"});
+  const h = el("div", {class:"horizonte", role:"progressbar", "aria-valuemin":"0", "aria-valuemax":String(total), "aria-valuenow":String(paso), "aria-label":"Progreso"},
+    el("span", {class:"paso"}, `${paso} de ${total}`), el("div", {class:"linea"}), avance, sol);
+  const fijar = (x) => { sol.style.left = `calc(${x*100}% )`; sol.style.bottom = `${0 + x*14}px`; avance.style.width = `${x*100}%`; };
+  fijar(Math.max(0,(paso-1)/total));
+  requestAnimationFrame(() => requestAnimationFrame(() => fijar(f)));
+  return h;
+}
+
+function pantalla(...hijos){ app.replaceChildren(...hijos.filter(h => h != null && h !== false)); window.scrollTo(0,0); }
+
+/* ---------- Pantallas ---------- */
+function bienvenida(){
+  const guia = el("div", {class:"guia"});
+  const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
+    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], perfil:{} });
+    perfil(0); }}, "Empezar");
+  pantalla(
+    el("div", {class:"marca"}, "PRIOR"),
+    el("section", {class:"portada"},
+      el("div", {class:"escena", "aria-hidden":"true"}, el("div",{class:"sol-grande"}), el("div",{class:"mar"}), el("div",{class:"linea"})),
+      el("h1", {class:"lema"}, "El futuro se practica."),
+      el("p", {class:"sublema"}, "Equivócate aquí. Acierta afuera."),
+      guia),
+    el("div", {class:"acciones"}, empezar)
+  );
+  escribir(guia, [
+    {texto:"Hola. Antes de enseñarte algo, quiero ver cómo decides."},
+    {texto:`Primero, dos preguntas rápidas sobre ti. Después, ${ESCENARIOS.length} situaciones. No hay respuestas correctas: elige lo que harías de verdad.`}
+  ], () => empezar.disabled = false);
+}
+
+// Mini perfil: adapta las situaciones a la moneda en que cobra la persona.
+function perfil(n){
+  const q = PERFIL_PREGUNTAS[n];
+  const guia = el("div", {class:"guia"});
+  const zona = el("div", {class:"opciones oculto"});
+  pantalla(
+    el("div", {class:"marca"}, "PRIOR"),
+    el("div", {class:"momento"}, `Antes de empezar · ${n+1} de ${PERFIL_PREGUNTAS.length}`),
+    guia, zona
+  );
+  escribir(guia, [{texto:q.pregunta, clase:"pregunta"}], () => {
+    zona.replaceChildren(...q.opciones.map(txt => el("button", {class:"opcion", type:"button", onclick:() => {
+      estado.perfil[q.clave] = txt;
+      n + 1 < PERFIL_PREGUNTAS.length ? perfil(n+1) : escenario();
+    }}, el("span", {}, txt))));
+    zona.classList.remove("oculto");
+  });
+}
+
+const plantilla = t => t.replace("{moneda}", MONEDA_TEXTO[estado.perfil.moneda] || "dólares");
+
+function escenario(){
+  const base = ESCENARIOS[estado.i];
+  const s = base.variantes ? { ...base, ...base.variantes[grupoMoneda(estado.perfil.moneda)] } : base;
+  const guia = el("div", {class:"guia"});
+  const zona = el("div", {class:"opciones oculto"});
+  const conse = el("div", {class:"consecuencia oculto"});
+  const siguiente = el("button", {class:"btn", type:"button", disabled:true}, estado.i === ESCENARIOS.length-1 ? "Ver mi resultado" : "Siguiente");
+  siguiente.addEventListener("click", () => { estado.i++; estado.i < ESCENARIOS.length ? escenario() : resultado(); });
+
+  // Máximo posible en cada materia para la variante que vio esta persona.
+  const maximo = s.maximo || [0,1,2].map(k => Math.max(...s.opciones.map(o => o[2][k])));
+  maximo.forEach((v,k) => estado.maximos[k] += v);
+
+  pantalla(
+    el("div", {class:"marca"}, "PRIOR"),
+    horizonte(estado.i+1, ESCENARIOS.length),
+    el("div", {class:"bloque"}, s.bloque),
+    guia, zona, conse,
+    el("div", {class:"acciones"}, siguiente)
+  );
+
+  const sumar = (p, creenciaFuerte) => {
+    p.forEach((v,k) => estado.puntos[k] += v);
+    if (creenciaFuerte && !estado.creencias.includes(s.dogma)) estado.creencias.push(s.dogma);
+  };
+  // Sin juicio durante el test: al elegir solo se activa "Siguiente". Las consecuencias quedan guardadas para el diagnóstico final.
+  const continuar = (espera = reducido ? 250 : 650) => { siguiente.disabled = false; setTimeout(() => { if (siguiente.isConnected) siguiente.click(); }, espera); };
+  siguiente.classList.add("oculto");
+  const mostrarConse = (html) => { conse.innerHTML = html; conse.classList.remove("oculto"); siguiente.disabled = false; siguiente.focus({preventScroll:true}); conse.scrollIntoView({behavior: reducido ? "auto":"smooth", block:"nearest"}); };
+
+  const pintarOpciones = (destino, lista, alElegir) => {
+    destino.replaceChildren(...lista.map((txt, k) => {
+      const b = el("button", {class: txt === "Otra respuesta" ? "opcion otra" : "opcion", type:"button", "aria-pressed":"false"}, el("span",{class:"letra"}, LETRAS[k]), el("span",{}, txt));
+      b.addEventListener("click", () => {
+        destino.querySelectorAll(".opcion").forEach(o => { o.disabled = true; });
+        b.setAttribute("aria-pressed","true");
+        alElegir(k);
+      });
+      return b;
+    }));
+    destino.classList.remove("oculto");
+  };
+
+  // Respuesta abierta: no suma puntos ni cuenta para la mezcla; se guarda para armar arquetipos.
+  const otraRespuesta = () => {
+    const caja = el("div", {class:"abierta"});
+    const area = el("textarea", {placeholder:"Cuéntanos qué harías tú, con tus palabras.", "aria-label":"Tu respuesta"});
+    const guardar = el("button", {class:"btn secundario", type:"button", disabled:true}, "Guardar mi respuesta");
+    area.addEventListener("input", () => guardar.disabled = area.value.trim().length < 5);
+    guardar.addEventListener("click", () => {
+      maximo.forEach((v,k) => estado.maximos[k] -= v);
+      estado.respuestas.push({id:s.id, opcion:"otra", texto:area.value.trim()});
+      area.disabled = true; guardar.remove();
+      mostrarConse("<b>Gracias.</b> Con respuestas como la tuya descubrimos formas de decidir que todavía no tenemos en la app. Esta situación no cuenta para tu mezcla.");
+      continuar(reducido ? 1500 : 3500);
+    });
+    caja.append(area, guardar); zona.after(caja); area.focus({preventScroll:true});
+    caja.scrollIntoView({behavior: reducido ? "auto":"smooth", block:"nearest"});
+  };
+
+  escribir(guia, [{texto:plantilla(s.contexto)}, {texto:s.pregunta, clase:"pregunta"}], () => {
+    if (s.tipo !== "dos_pasos") {
+      pintarOpciones(zona, [...s.opciones.map(o => o[0]), "Otra respuesta"], k => {
+        if (k === s.opciones.length) return otraRespuesta();
+        const [, consecuencia, p] = s.opciones[k];
+        sumar(p, p[2] >= 3);
+        estado.respuestas.push({id:s.id, opcion:LETRAS[k]});
+        continuar();
+      });
+    } else {
+      pintarOpciones(zona, s.paso1, r1 => {
+        setTimeout(() => {
+          const g2 = el("div", {class:"guia"});
+          zona.after(g2);
+          const zona2 = el("div", {class:"opciones oculto"});
+          g2.after(zona2);
+          escribir(g2, [{texto:s.pregunta2, clase:"pregunta"}], () => {
+            pintarOpciones(zona2, s.paso2, k => {
+              const acierta = r1 === s.correcta, nose = r1 === 3, adivina = k === 2;
+              let p, msg;
+              if (acierta && !adivina)      { p=[0,0,0]; msg="Tu confianza está calibrada."; }
+              else if (acierta && adivina)  { p=[0,1,1]; msg="Sabes más de lo que crees."; }
+              else if (nose || adivina)     { p=[0,3,0]; msg="Reconoces lo que no sabes: es un buen punto de partida."; }
+              else if (k === 0)             { p=[0,2,3]; msg="Estabas muy seguro de algo que no era así."; }
+              else                          { p=[0,2,2]; msg="Confiabas un poco más de lo que sabías."; }
+              sumar(p, p[2] >= 3);
+              estado.respuestas.push({id:s.id, opcion:`${LETRAS[r1]}${LETRAS[k]}`});
+              continuar();
+            });
+          });
+        }, reducido ? 0 : 250);
+      });
+    }
+  });
+}
+
+// Normaliza por el máximo que pudo sumar cada materia, aplica piso de 20% y redondea a 100.
+function calcularMezcla(puntos){
+  const n = puntos.map((v,k) => estado.maximos[k] ? v / estado.maximos[k] : 0);
+  const suma = n.reduce((a,b) => a+b, 0);
+  if (suma === 0) return [33,33,34];
+  let p = n.map(v => v / suma);
+  const fijas = new Set();
+  for (let vuelta = 0; vuelta < 3; vuelta++) {
+    const bajas = p.map((v,k) => (!fijas.has(k) && v < 0.2) ? k : -1).filter(k => k >= 0);
+    if (!bajas.length) break;
+    bajas.forEach(k => fijas.add(k));
+    const libres = [0,1,2].filter(k => !fijas.has(k));
+    const resto = 1 - 0.2 * fijas.size;
+    const sumaLibres = libres.reduce((a,k) => a + n[k], 0);
+    p = p.map((v,k) => fijas.has(k) ? 0.2 : (sumaLibres > 0 ? resto * n[k] / sumaLibres : resto / libres.length));
+  }
+  const crudo = p.map(v => v * 100), base = crudo.map(Math.floor);
+  let falta = 100 - base.reduce((a,b) => a+b, 0);
+  crudo.map((v,k) => [v - base[k], k]).sort((a,b) => b[0]-a[0]).forEach(([,k]) => { if (falta > 0) { base[k]++; falta--; } });
+  return base;
+}
+
+function resultado(){
+  const mezcla = calcularMezcla(estado.puntos);
+  estado.mezcla = mezcla;
+  const orden = [0,1,2].sort((a,b) => mezcla[b] - mezcla[a]);
+  const primera = orden[0];
+  const filas = orden.map(k => {
+    const barra = el("i");
+    const f = el("div", {class:"materia" + (k === primera ? " primera" : "")},
+      el("div", {class:"fila"}, el("span", {class:"nombre"}, MATERIAS[k].nombre), el("span", {class:"pct"}, `${mezcla[k]}%`)),
+      el("div", {class:"barra", "aria-hidden":"true"}, barra),
+      el("p", {}, MATERIAS[k].frase));
+    requestAnimationFrame(() => requestAnimationFrame(() => barra.style.width = `${mezcla[k]}%`));
+    return f;
+  });
+  const creencias = estado.creencias.length ? el("section", {class:"creencias"},
+    el("h2", {}, "Creencias que vamos a revisar contigo"),
+    el("ul", {}, ...estado.creencias.slice(0,3).map(c => el("li", {}, c))),
+    el("p", {class:"nota"}, "Tuvieron sentido en la crisis. Vamos a ver si todavía te sirven.")) : null;
+
+  pantalla(
+    el("div", {class:"marca"}, "PRIOR"),
+    el("h1", {class:"titulo"}, `Tu ruta empieza por ${MATERIAS[primera].nombre.toLowerCase()}.`),
+    el("p", {class:"sublema"}, "Esta es tu mezcla: cuánto de cada materia va a tener tu ruta. Ninguna baja de 20%, para que no te saltes nada."),
+    el("div", {class:"mezcla"}, ...filas),
+    creencias,
+    el("div", {class:"acciones"}, el("button", {class:"btn", type:"button", onclick:cuenta}, "Guardar mi resultado"))
+  );
+}
+
+function cuenta(){
+  if (usuario) { guardarDiagnostico(); return final(); }
+  const correo = el("input", {type:"email", autocomplete:"email", inputmode:"email", placeholder:"tu@correo.com"});
+  const clave = el("input", {type:"password", autocomplete:"new-password", placeholder:"Mínimo 6 caracteres"});
+  const error = el("p", {class:"error", role:"alert"});
+  const crear = el("button", {class:"btn", type:"button"}, "Crear cuenta y guardar");
+  const entrar = el("button", {class:"btn secundario", type:"button"}, "Ya tengo cuenta");
+  const enviar = async (modo) => {
+    error.textContent = "";
+    if (!sb) { error.textContent = "La app todavía no está conectada a la base de datos."; return; }
+    if (!correo.value.includes("@")) { error.textContent = "Escribe tu correo."; return; }
+    if (clave.value.length < 6) { error.textContent = "La contraseña debe tener al menos 6 caracteres."; return; }
+    crear.disabled = entrar.disabled = true;
+    const datos = { email: correo.value.trim(), password: clave.value };
+    const { data, error: e } = modo === "crear" ? await sb.auth.signUp(datos) : await sb.auth.signInWithPassword(datos);
+    crear.disabled = entrar.disabled = false;
+    if (e) { error.textContent = traducirError(e.message); return; }
+    if (!data.session) { error.textContent = "Te enviamos un correo para confirmar la cuenta. Confírmala y vuelve a tocar “Ya tengo cuenta”."; return; }
+    usuario = data.session.user;
+    await guardarDiagnostico();
+    final();
+  };
+  crear.addEventListener("click", () => enviar("crear"));
+  entrar.addEventListener("click", () => enviar("entrar"));
+  pantalla(
+    el("div", {class:"marca"}, "PRIOR"),
+    el("h1", {class:"titulo"}, "Crea tu cuenta para guardar tu resultado"),
+    el("p", {class:"sublema"}, "Así tu ruta te espera la próxima vez y puedes invitar a otras personas con tu código."),
+    el("label", {class:"campo"}, "Correo", correo),
+    el("label", {class:"campo"}, "Contraseña", clave),
+    error,
+    el("p", {class:"privacidad"}, "Guardamos tus respuestas para mejorar PRIOR. Nunca te pedimos montos ni dónde guardas tu dinero."),
+    el("div", {class:"acciones"}, crear, entrar,
+      el("button", {class:"btn texto", type:"button", onclick:final}, "Seguir sin guardar"))
+  );
+}
+
+/* ================= Lección E1: Tasas, bancos y tu bolívar (guion v2, 13 oct 2026) ================= */
+// Cifras que caducan: en la app real viven en una tabla editable de Supabase.
+const DATOS = {
+  sueldo:87680, mitad:43840, tasaBCV:"876,80", plazo:0.46, cuenta:0.10, ahorro:0.42,
+  inflMes:0.084, inflAnual:4.65, dolarMes:0.033, costoCambio:0.99,
+  encajeVista:73, encajePlazo:50, fuente:"Cifras ilustrativas con datos del BCV y análisis publicados en septiembre y octubre de 2026."
+};
+const fmt = n => n.toLocaleString("es-VE", {maximumFractionDigits:0});
+const pct = (n, d=1) => (n*100).toLocaleString("es-VE", {minimumFractionDigits:d, maximumFractionDigits:d}) + "%";
+const poder = (op, i, d) => {
+  const c = Math.pow(1+i, 3);
+  if (op === 0) return (1 + DATOS.plazo*3/12) / c;
+  if (op === 1) return (1 + DATOS.cuenta*3/12) / c;
+  if (op === 2) return Math.pow(1+d, 3) * DATOS.costoCambio / c;
+  return 1;
+};
+const OPC_LECCION = ["Los pongo a plazo. 46% es más de lo que paga casi cualquier cosa.",
+  "Los dejo en la cuenta. Ahora paga 10% y los tengo a la mano.",
+  "Los cambio hoy a dólares y los guardo hasta que los necesite.",
+  "Compro hoy cosas que sé que voy a usar en esos tres meses."];
+const OPC_CORTAS = ["Plazo al 46%", "Cuenta al 10%", "Dólares", "Comprar hoy lo que usaré"];
+// Pregunta de predicción según lo que eligió la persona en el momento 1.
+const PREDICCION = [
+  ["El banco te paga 46% al año. En septiembre los precios subieron 8,4% en un solo mes.",
+   {texto:"En tres meses, ¿tus bolívares a plazo compran más o menos que hoy?", clase:"pregunta"}],
+  ["La cuenta te paga 10% al año. En septiembre los precios subieron 8,4% en un solo mes.",
+   {texto:"En tres meses, ¿tus bolívares en la cuenta compran más o menos que hoy?", clase:"pregunta"}],
+  ["En septiembre el dólar oficial subió cerca de 3% y los precios subieron 8,4%, en un solo mes.",
+   {texto:"En tres meses, ¿tus dólares compran más o menos aquí que hoy?", clase:"pregunta"}],
+  ["Compraste hoy lo que vas a usar. En septiembre los precios subieron 8,4% en un solo mes.",
+   {texto:"Si hubieras esperado tres meses para comprarlo, ¿ese mismo dinero compraría más o menos?", clase:"pregunta"}]
+];
+const MOMENTOS = ["Decide", "Lo que pasó y la creencia", "La teoría", "Vuelve a decidir", "Llévalo a tu vida"];
+
+const L = { paso:0, criterio:0, desglose:[], datos:{}, otorgado:new Set(), conceptos:[], zona:null };
+
+function celebrar(puntos, razon){
+  if (reducido) return; // con movimiento reducido queda solo el sello dentro de la pantalla
+  document.querySelector(".celebra")?.remove();
+  const capa = el("div", {class:"celebra", role:"status", "aria-live":"polite"},
+    el("div", {class:"caja"},
+      el("div", {class:"cielo-mini", "aria-hidden":"true"}, el("i"), el("b")),
+      el("div", {class:"cuanto"}, `+${puntos} Criterio`),
+      el("div", {class:"porque"}, razon.charAt(0).toUpperCase() + razon.slice(1) + ".")));
+  const cerrar = () => { capa.classList.remove("ver"); setTimeout(() => capa.remove(), 350); };
+  capa.addEventListener("click", cerrar);
+  document.body.append(capa);
+  requestAnimationFrame(() => requestAnimationFrame(() => capa.classList.add("ver")));
+  setTimeout(cerrar, 1500);
+}
+
+function ganar(clave, puntos, razon){
+  if (L.otorgado.has(clave)) return;
+  L.otorgado.add(clave); L.criterio += puntos; L.desglose.push([razon, puntos]);
+  celebrar(puntos, razon);
+  const c = document.querySelector(".criterio-total");
+  if (c) { c.textContent = `${L.criterio} Criterio`; c.classList.remove("sube"); void c.offsetWidth; c.classList.add("sube"); }
+  const zona = L.zona;
+  if (zona) setTimeout(() => zona.append(el("div", {class:"sello", role:"status"}, el("i", {class:"sol-mini", "aria-hidden":"true"}), el("b", {}, `+${puntos} Criterio`), el("span", {}, razon))), 0);
+}
+
+// Pantalla de lección: guía con burbujas, luego la interacción; "Seguir" se activa con listo().
+function pl({momento, burbujas, construir, boton="Seguir", saltable=false, concepto=null, auto=false}){
+  const total = PANTALLAS.length;
+  const guia = el("div", {class:"guia"});
+  const zona = el("div", {});
+  const seguir = el("button", {class:"btn", type:"button", disabled:true}, boton);
+  seguir.addEventListener("click", () => { L.paso++; L.paso < total ? PANTALLAS[L.paso]() : cierre(); });
+  const acciones = el("div", {class:"acciones"}, seguir);
+  if (auto) seguir.classList.add("oculto");
+  if (saltable) acciones.append(el("button", {class:"btn texto", type:"button", onclick:() => { L.paso++; PANTALLAS[L.paso](); }}, "Saltar esta parte"));
+  pantalla(
+    el("div", {class:"cabecera"}, el("span", {class:"marca"}, "PRIOR"), el("span", {class:"criterio-total"}, `${L.criterio} Criterio`)),
+    horizonte(L.paso+1, total),
+    el("div", {class:"momento"}, `Momento ${momento} de 5 · ${MOMENTOS[momento-1]}`),
+    guia, zona, acciones
+  );
+  L.zona = zona;
+  const pasoActual = L.paso;
+  const avanzar = () => { if (L.paso === pasoActual && seguir.isConnected) seguir.click(); };
+  const listo = () => {
+    seguir.disabled = false;
+    if (auto) {
+      // Tiempo para leer la nota y la idea; un toque en la pantalla pasa de inmediato.
+      setTimeout(() => {
+        const texto = [...zona.querySelectorAll(".consecuencia, .concepto")].map(x => x.textContent).join(" ");
+        const espera = reducido ? 1200 : Math.min(1100 + texto.length * 38, 8000);
+        const barra = el("i"); const cuenta = el("div", {class:"cuenta", "aria-hidden":"true"}, barra);
+        acciones.prepend(cuenta);
+        requestAnimationFrame(() => requestAnimationFrame(() => { barra.style.transitionDuration = espera + "ms"; barra.style.width = "100%"; }));
+        app.addEventListener("click", avanzar, {once:true});
+        setTimeout(avanzar, espera);
+      }, 30);
+    }
+    if (concepto && !zona.querySelector(".concepto")) setTimeout(() => {
+      if (zona.querySelector(".concepto")) return;
+      zona.append(el("div", {class:"concepto"}, el("small", {}, "La idea"), el("h3", {}, concepto[0]), el("p", {}, concepto[1])));
+    }, 10);
+    if (concepto && !L.conceptos.some(c => c[0] === concepto[0])) L.conceptos.push(concepto);
+  };
+  escribir(guia, burbujas.map(b => typeof b === "string" ? {texto:b} : b), () => construir ? construir(zona, listo) : listo());
+}
+
+function elegir(zona, lista, alElegir){
+  const cont = el("div", {class:"opciones"});
+  cont.append(...lista.map((txt, k) => {
+    const b = el("button", {class:"opcion", type:"button", "aria-pressed":"false"}, el("span",{class:"letra"}, LETRAS[k]), el("span",{}, txt));
+    b.addEventListener("click", () => {
+      cont.querySelectorAll(".opcion").forEach(o => o.disabled = true);
+      b.setAttribute("aria-pressed","true"); alElegir(k);
+    });
+    return b;
+  }));
+  zona.append(cont); return cont;
+}
+const nota = (zona, html) => { const c = el("div", {class:"consecuencia"}); c.innerHTML = html; zona.append(c); c.scrollIntoView({behavior: reducido?"auto":"smooth", block:"nearest"}); return c; };
+
+function slider(etiqueta, min, max, paso, valor, mostrar, alMover){
+  const salida = el("span", {}, mostrar(valor));
+  const input = el("input", {type:"range", min, max, step:paso, value:valor, "aria-label":etiqueta});
+  input.addEventListener("input", () => { salida.textContent = mostrar(+input.value); alMover(+input.value); });
+  return el("div", {class:"slider"}, el("label", {}, el("span", {}, etiqueta), salida), input);
+}
+function barrasPoder(valores, tuya){
+  const cont = el("div", {class:"barras"});
+  const filas = valores.map(([nombre, v], k) => {
+    const i = el("i"); const marca = el("span", {class:"marca-uno"});
+    const etiqueta = el("span", {}, "");
+    const f = el("div", {class: k === tuya ? "tuya" : ""},
+      el("div", {class:"fila"}, el("span", {}, nombre + (k === tuya ? " (tu opción)" : "")), etiqueta),
+      el("div", {class:"barra"}, i, marca));
+    return {f, i, marca, etiqueta};
+  });
+  const pintar = (vals) => vals.forEach(([, v], k) => {
+    const {i, marca, etiqueta} = filas[k];
+    const ancho = Math.min(v / 1.3, 1) * 100;
+    i.style.width = `${ancho}%`; marca.style.left = `${100/1.3}%`;
+    etiqueta.textContent = v === 1 ? "igual que hoy" : (v < 1 ? `${pct(1-v)} menos` : `${pct(v-1)} más`);
+  });
+  cont.append(...filas.map(x => x.f));
+  requestAnimationFrame(() => requestAnimationFrame(() => pintar(valores)));
+  cont.actualizar = pintar;
+  return cont;
+}
+
+const PANTALLAS = [
+  // ---- Momento 1 · Decide
+  () => pl({auto:true, momento:1, burbujas:[
+      ...(grupoMoneda(estado.perfil.moneda) === "usd" ? [`Tú cobras en ${MONEDA_TEXTO[estado.perfil.moneda]}, pero igual pagas en bolívares. Esta lección parte de alguien que cobra en bolívares, porque explica cómo funciona el bolívar que usas cada día.`] : []),
+      `Imagina que hoy te depositaron Bs. ${fmt(DATOS.sueldo)}. A la tasa BCV de hoy (${DATOS.tasaBCV} Bs por dólar) son unos 100 dólares.`,
+      `La mitad, Bs. ${fmt(DATOS.mitad)}, no la vas a necesitar hasta dentro de tres meses.`,
+      "Tu banco te ofrece ponerla en un depósito a plazo al 46% anual.",
+      {texto:`¿Qué haces con los Bs. ${fmt(DATOS.mitad)}?`, clase:"pregunta"}],
+    construir:(z, listo) => elegir(z, OPC_LECCION, k => { L.datos.m1_opcion = LETRAS[k]; ganar("m1", 10, "decidiste sin miedo a equivocarte"); listo(); }) }),
+
+  // ---- Momento 2 · Lo que pasó y la creencia
+  () => pl({momento:2, auto:true, burbujas:[
+      "Antes de ver qué pasó, predice.",
+      ...PREDICCION["ABCD".indexOf(L.datos.m1_opcion)] ],
+    construir:(z, listo) => elegir(z, ["Más", "Lo mismo", "Menos", "Mucho menos"], k => {
+      L.datos.m2_prediccion = ["mas","igual","menos","mucho_menos"][k];
+      ganar("m2", 5, "hiciste tu predicción");
+      nota(z, k >= 2 ? "<b>Bien leído.</b> Veamos cuánto menos." : "<b>Veamos qué pasa con los números.</b>");
+      listo(); }) }),
+
+  () => pl({momento:2, burbujas:["Esto es lo que pasa en tres meses si los precios siguen como en septiembre y la tasa como en octubre."],
+    construir:(z, listo) => {
+      const op = "ABCD".indexOf(L.datos.m1_opcion);
+      const precio = DATOS.mitad * Math.pow(1+DATOS.inflMes, 3);
+      z.append(el("div", {class:"tarjeta"}, el("p", {}, `Lo que hoy cuesta Bs. ${fmt(DATOS.mitad)} costará unos Bs. ${fmt(precio)}.`)));
+      z.append(barrasPoder([
+        ["A · Plazo al 46%", poder(0, DATOS.inflMes, DATOS.dolarMes)],
+        ["B · Cuenta al 10%", poder(1, DATOS.inflMes, DATOS.dolarMes)],
+        ["C · Dólares", poder(2, DATOS.inflMes, DATOS.dolarMes)],
+        ["D · Comprar hoy", 1]], op));
+      z.append(el("p", {class:"leyenda"}, "La barra muestra cuánto compra tu dinero comparado con hoy; la raya marca “igual que hoy”."));
+      const textos = [
+        `A plazo recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.plazo*3/12))}, pero compras 12,5% menos que hoy.`,
+        `En la cuenta recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.cuenta*3/12))} y compras 19,5% menos.`,
+        "Conservas 50 dólares, pero la tasa subió unos 3% al mes y los precios 8%. Tus dólares compran unos 14% menos aquí. Sí, los dólares también pierden.",
+        "Congelas el precio de esas cosas. Funciona solo con lo que de verdad vas a usar y puedes guardar."];
+      nota(z, `<b>Tu opción:</b> ${textos[op]}`);
+      z.append(el("p", {class:"fuente"}, DATOS.fuente));
+      listo(); } }),
+
+  () => {
+    const op = L.datos.m1_opcion;
+    const A = "El 46% suena alto, pero un número más grande no significa más poder de compra. En economía se llama ilusión monetaria: mirar la cifra y no lo que esa cifra compra.";
+    const C = "Aquí la creencia es “el dólar siempre protege”. Lo hizo durante años de devaluación fuerte. Pero cuando la tasa se mueve más lento que los precios, el dólar también pierde poder de compra en Venezuela.";
+    const primera = op === "C" ? C : A;
+    const segunda = op === "C" ? A : C;
+    pl({momento:2, burbujas:[
+        op === "A" || op === "C" ? primera : "Hay dos creencias que suelen estar detrás de esta decisión. La primera:",
+        ...(op === "A" || op === "C" ? [] : [A])],
+      construir:(z, listo) => {
+        const extra = el("div", {class:"oculto"});
+        const btn = el("button", {class:"vermas", type:"button"}, op === "A" || op === "C" ? "Ver la otra creencia común" : "Ver la segunda");
+        btn.addEventListener("click", () => { extra.classList.remove("oculto"); btn.remove(); ganar("m2b", 5, "exploraste las dos creencias"); });
+        extra.append(el("div", {class:"burbuja"}, op === "A" || op === "C" ? segunda : C));
+        z.append(btn, extra);
+        z.append(el("div", {class:"tarjeta"}, el("p", {}, "Ninguna de las dos es tonta: las dos tuvieron sentido en otro momento. La pregunta es qué dicen los números hoy.")));
+        listo(); },
+      concepto:["Ilusión monetaria", "Mirar la cifra (46%, 100 dólares) y no lo que esa cifra compra."] });
+  },
+
+  // ---- Momento 3a · El problema
+  () => pl({auto:true, momento:3, burbujas:[
+      "Un banco hace intermediación financiera: recibe depósitos, presta ese dinero y vive de la diferencia entre lo que cobra por prestar y lo que paga por guardar.",
+      "En casi todo el mundo, tus ahorros en el banco se convierten en el crédito de alguien que compra una casa o abre un negocio.",
+      {texto:"¿De dónde crees que sale el dinero que presta un banco?", clase:"pregunta"}],
+    construir:(z, listo) => elegir(z, ["De tus depósitos", "Del gobierno", "Lo imprime"], k => {
+      ganar("m3a", 5, "respondiste antes de ver la teoría");
+      nota(z, k === 0 ? "<b>Así es:</b> de los depósitos de gente como tú." : "<b>En realidad,</b> sale sobre todo de los depósitos de gente como tú.");
+      listo(); }),
+    concepto:["Intermediación financiera", "El banco recibe depósitos, los presta y vive de la diferencia entre lo que cobra y lo que paga."] }),
+
+  () => pl({momento:3, burbujas:[
+      "En Venezuela, el BCV obliga a los bancos a dejar inmovilizada en el propio BCV una parte enorme de lo que depositas: el encaje legal.",
+      `Hoy es ${DATOS.encajeVista}% de los depósitos de ahorro y a la vista, y ${DATOS.encajePlazo}% de los depósitos a plazo.`],
+    construir:(z, listo) => {
+      const m = el("div", {class:"monedas", "aria-label":"De 100 bolívares, 73 quedan inmovilizados"});
+      for (let k = 0; k < 100; k++) m.append(el("i"));
+      z.append(m, el("p", {class:"leyenda"}, "Toca para ver qué pasa con 100 bolívares de tu cuenta de ahorro."));
+      const resultado = el("p", {class:"cifra oculto"}, "Solo 27 se pueden prestar.");
+      z.append(resultado);
+      m.addEventListener("click", () => {
+        [...m.children].forEach((c, k) => { if (k < DATOS.encajeVista) setTimeout(() => c.classList.add("encajada"), reducido ? 0 : k*12); });
+        setTimeout(() => { resultado.classList.remove("oculto"); listo(); ganar("m3b", 5, "viste el encaje en acción"); }, reducido ? 0 : 1000);
+      }, {once:true});
+      const extra = el("div", {class:"tarjeta oculto"}, el("p", {}, "En la región: Brasil 25%, Uruguay 22%, Colombia 11%, Chile 9%, Perú 3%."));
+      const btn = el("button", {class:"vermas", type:"button", onclick:() => { extra.classList.remove("oculto"); btn.remove(); }}, "Ver más: ¿y en otros países?");
+      z.append(btn, extra);
+    },
+    concepto:["Encaje legal", "La parte de tus depósitos que el banco debe dejar inmovilizada en el BCV y no puede prestar."] }),
+
+  () => pl({momento:3, concepto:["Política monetaria contractiva", "Frenar la cantidad de bolívares que circulan para contener la inflación y el dólar. Su costo: casi no hay crédito."], burbujas:[
+      "¿Por qué el BCV hace esto? Para frenar la inflación y la subida del dólar. Si los bancos prestan menos, circulan menos bolívares, y hay menos bolívares buscando comprar dólares.",
+      "Es política monetaria contractiva. Tiene un costo: casi no hay crédito. El crédito bancario no llega al 4% del tamaño de la economía; en Colombia es cerca de 50%."] }),
+
+  () => pl({momento:3, burbujas:[
+      `El BCV también fija cuánto deben pagar los bancos como mínimo al año: 10% en la cuenta a la vista, 42% en ahorro y 46% a plazo.`,
+      "Pero los precios subieron 465% en los últimos doce meses.",
+      "La tasa real es lo que te pagan descontando la inflación. Mueve la inflación y mira qué pasa con un depósito al 46%."],
+    construir:(z, listo) => {
+      const cifra = el("p", {class:"cifra"});
+      const calc = v => { const r = (1+DATOS.plazo)/(1+v/100) - 1; cifra.textContent = `Tasa real: ${r >= 0 ? "+" : ""}${pct(r,0)} al año`; };
+      calc(465);
+      let movido = false;
+      z.append(slider("Inflación anual", 0, 600, 5, 465, v => `${v}%`, v => { calc(v); if (!movido) { movido = true; ganar("m3c", 5, "probaste la tasa real"); listo(); } }));
+      z.append(cifra, el("p", {class:"formula"}, "Tasa real = (1 + tasa) / (1 + inflación) − 1"));
+      z.append(el("div", {class:"tarjeta"}, el("p", {}, "Cuando un país mantiene a propósito tasas por debajo de la inflación y limita el crédito, los economistas lo llaman represión financiera.")));
+    },
+    concepto:["Tasa real", "Lo que de verdad ganas: lo que te pagan descontando cuánto subieron los precios."] }),
+
+  () => pl({auto:true, momento:3, burbujas:[
+      "Si casi no pueden prestar y pagan intereses cada vez más altos, ¿de qué viven los bancos?",
+      "De comisiones (transferencias, puntos de venta, mantenimiento), de operaciones de cambio de divisas y de créditos indexados.",
+      "Los préstamos y tarjetas en bolívares se expresan en UVC (Unidad de Valor de Crédito), que se ajusta con el tipo de cambio oficial. Si el bolívar se devalúa, la deuda sube con él.",
+      {texto:"Si tu deuda se ajusta con el dólar, ¿quién carga el riesgo de la devaluación?", clase:"pregunta"}],
+    construir:(z, listo) => elegir(z, ["Yo", "El banco"], k => {
+      ganar("m3d", 5, "razonaste quién carga el riesgo");
+      nota(z, k === 0 ? "<b>Exacto:</b> el riesgo lo cargas tú, no el banco." : "<b>En realidad lo cargas tú:</b> si el bolívar cae, tu deuda sube y el banco no pierde.");
+      listo(); }),
+    concepto:["Crédito indexado (UVC)", "Una deuda que se ajusta con el tipo de cambio: si el bolívar cae, lo que debes sube."] }),
+
+  // ---- Momento 3b · El impacto
+  () => pl({auto:true, momento:3, burbujas:["Esto le causa cuatro efectos a tu dinero que vives sin verlos.", {texto:"¿Cuál vives más?", clase:"pregunta"}],
+    construir:(z, listo) => {
+      const efectos = [
+        ["Huida del bolívar", "Nadie quiere guardar bolívares: todos los cambian apenas cobran. Esa demanda presiona la tasa, y la tasa presiona los precios. Es un círculo."],
+        ["Sin crédito formal", "La casa, el carro o el negocio se compran de contado o no se compran. El hueco se llena con cuotas, sanes, préstamos entre familiares y prestamistas."],
+        ["Descalce de monedas", "Cobras en bolívares y muchos precios están en dólares. Cada salto de la tasa te pega a ti."],
+        ["Inflación en dólares", "Cuando la tasa sube menos que los precios, tu dólar compra menos aquí, aunque sigan siendo dólares."]];
+      const cont = elegir(z, efectos.map(e => e[0]), k => {
+        L.datos.m3_impacto = efectos[k][0];
+        ganar("m3e", 5, "reconociste un efecto en tu vida");
+        nota(z, `<b>${efectos[k][0]}:</b> ${efectos[k][1]}`);
+        listo(); });
+    },
+    concepto:["Descalce de monedas", "Ganar en una moneda y gastar en otra: cada movimiento de la tasa te pega a ti."] }),
+
+  () => pl({momento:3, saltable:true, burbujas:[
+      "Un dato más, opcional: el costo escondido del crédito informal.",
+      "Un prestamista que cobra 10% al mes en dólares parece poco. Mueve el interés mensual y mira cuánto pagas en un año."],
+    construir:(z, listo) => {
+      const cifra = el("p", {class:"cifra"});
+      const calc = v => { const a = Math.pow(1+v/100, 12) - 1; cifra.textContent = `${pct(a,0)} al año`; };
+      calc(10);
+      z.append(slider("Interés mensual", 2, 20, 1, 10, v => `${v}%`, v => calc(v)), cifra,
+        el("p", {class:"formula"}, "Al 10% mensual: 1,10 elevado a 12 = 3,14. Pagas más del triple en un año, en dólares."));
+      listo(); } }),
+
+  // ---- Momento 3c · La solución
+  () => pl({momento:3, boton:"Probar con números", burbujas:["No arreglas el sistema, pero sí tu parte. Cinco acciones pequeñas:"],
+    construir:(z, listo) => {
+      z.append(el("ol", {class:"lista"},
+        el("li", {}, "Calcula la tasa real antes de decidir: compara lo que te pagan con lo que suben los precios en el mismo período."),
+        el("li", {}, "Calza tus monedas: lo que vas a gastar en bolívares esta semana, déjalo en bolívares. Lo que es para después, no lo dejes quieto sin comparar."),
+        el("li", {}, "Paga pronto lo que tiene precio fijo en bolívares: cada día de espera es más caro."),
+        el("li", {}, "Antes de financiarte, pasa el costo a anual y en dólares."),
+        el("li", {}, "Anota la tasa del día en que cobras y en que pagas. Sin ese dato no sabes si ganaste o perdiste.")));
+      listo(); } }),
+
+  () => pl({momento:3, burbujas:["Ahora tú mueves el mercado.", "Cambia cuánto suben los precios y cuánto sube el dólar oficial cada mes, y mira cuál opción conserva más poder de compra en tres meses."],
+    construir:(z, listo) => {
+      let i = DATOS.inflMes, d = DATOS.dolarMes; const vistos = new Set();
+      const vals = () => [["A · Plazo al 46%", poder(0,i,d)], ["B · Cuenta al 10%", poder(1,i,d)], ["C · Dólares", poder(2,i,d)], ["D · Comprar hoy", 1]];
+      const barras = barrasPoder(vals(), -1);
+      const registrar = () => { vistos.add(`${i}-${d}`); L.datos.m3_simulaciones = vistos.size;
+        if (vistos.size >= 3) { ganar("m3f", 5, "probaste varios escenarios"); listo(); } };
+      z.append(
+        slider("Precios al mes", 0, 20, 0.5, i*100, v => `${v.toLocaleString("es-VE")}%`, v => { i = v/100; barras.actualizar(vals()); registrar(); }),
+        slider("Dólar oficial al mes", 0, 20, 0.5, d*100, v => `${v.toLocaleString("es-VE")}%`, v => { d = v/100; barras.actualizar(vals()); registrar(); }),
+        barras,
+        el("p", {class:"leyenda"}, "Prueba al menos tres combinaciones."));
+    } }),
+
+  () => pl({momento:3, boton:"Decidir otra vez", concepto:["No hay refugio fijo", "Lo que conserva tu poder de compra depende de comparar precios, tasas y tipo de cambio en el mismo período."], burbujas:[
+      "Cuando la tasa de cambio se queda quieta y los precios suben, ni el banco ni el dólar te protegen del todo.",
+      "Cuando la tasa salta más que los precios, el dólar vuelve a ganar.",
+      "No hay un refugio fijo. Hay números que cambian, y se pueden leer."] }),
+
+  // ---- Momento 4 · Vuelve a decidir
+  () => pl({auto:true, momento:4, burbujas:[
+      `Mismo cobro, mismos Bs. ${fmt(DATOS.mitad)} para dentro de tres meses.`,
+      "Pero ahora el BCV deja de contener la tasa: se espera que el dólar oficial suba 10% al mes y los precios 9%.",
+      {texto:"¿Qué haces?", clase:"pregunta"}],
+    construir:(z, listo) => elegir(z, OPC_CORTAS, k => {
+      L.datos.m4_opcion = LETRAS[k];
+      const v = poder(k, 0.09, 0.10);
+      nota(z, k === 3 ? "<b>Resultado:</b> congelas el precio de lo que compraste; sirve solo para lo que vas a usar."
+        : `<b>Resultado:</b> en tres meses compras ${v < 1 ? pct(1-v) + " menos" : pct(v-1) + " más"} que hoy.`);
+      listo(); }) }),
+
+  () => pl({auto:true, momento:4, burbujas:[{texto:"¿En qué te fijaste para decidir?", clase:"pregunta"}],
+    construir:(z, listo) => elegir(z, [
+        "Comparé lo que paga el banco con lo que suben los precios",
+        "Comparé lo que sube el dólar con lo que suben los precios",
+        "El dólar siempre protege",
+        "Lo que haría la gente que conozco"], k => {
+      L.datos.m4_razon = k;
+      if (k <= 1) { ganar("m4", 25, "cambiaste tu decisión con argumentos"); nota(z, "<b>Así se decide con criterio:</b> comparaste números, no una regla fija."); }
+      else { ganar("m4", 10, "volviste a decidir"); nota(z, "<b>Funciona a veces,</b> pero no siempre: la próxima vez, compara los números antes de decidir."); }
+      listo(); }) }),
+
+  // ---- Momento 5 · Llévalo a tu vida
+  () => pl({momento:5, boton:"Terminar la lección", burbujas:["Ahora, tu vida real."],
+    construir:(z, listo) => {
+      const monedas = ["Bolívares", "Dólares", "Las dos"];
+      const paso2 = el("div", {}), paso3 = el("div", {class:"oculto"});
+      const m = estado.perfil.moneda;
+      L.datos.m5_moneda_cobro = !m ? "Bolívares" : m === "Bolívares" ? "Bolívares" : m === "Una mezcla" ? "Las dos" : "Dólares";
+      z.append(el("div", {class:"tarjeta"}, el("p", {}, `Al inicio nos dijiste que cobras en ${MONEDA_TEXTO[m] || "bolívares"}.`)));
+      paso2.append(el("p", {class:"pregunta-chica"}, "¿En qué moneda están la mayoría de tus gastos fijos?"));
+      elegir(paso2, monedas, k => {
+        L.datos.m5_moneda_gastos = monedas[k];
+        const c = L.datos.m5_moneda_cobro;
+        if (c !== monedas[k] && c !== "Las dos" && monedas[k] !== "Las dos")
+          nota(paso2, "<b>Tienes un descalce:</b> cada movimiento de la tasa te afecta. Es justo lo que medirá el termómetro de PRIOR.");
+        paso3.classList.remove("oculto"); paso3.scrollIntoView({behavior: reducido?"auto":"smooth", block:"nearest"}); });
+      const acciones = ["Anotar la tasa del día en que cobro y en que pago", "Calcular la tasa real de mi cuenta", "Revisar cuánto me cuesta de verdad una cuota o un préstamo", "Separar en bolívares solo lo de esta semana"];
+      paso3.append(el("p", {class:"pregunta-chica"}, "¿Qué vas a hacer esta semana?"));
+      const area = el("textarea", {placeholder:"Escríbelo en una frase: qué vas a hacer y cuándo.", "aria-label":"Tu decisión de esta semana"});
+      elegir(paso3, acciones, k => { L.datos.m5_accion = acciones[k]; paso3.append(area); area.focus({preventScroll:true}); });
+      area.addEventListener("input", () => {
+        L.datos.m5_texto = area.value.trim();
+        if (L.datos.m5_texto.length >= 8) listo();
+      });
+      z.append(paso2, paso3);
+    } })
+];
+
+// Heurística solo para la demo: en la vuelta 1 Carmen juzga el diario a mano.
+function esConcreta(t){ return t.length >= 25 && /(hoy|mañana|lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo|semana|día|dia|quincena|cobro|cuando)/i.test(t); }
+
+function cierre(){
+  L.zona = null;
+  const t = L.datos.m5_texto || "";
+  if (esConcreta(t)) ganar("m5", 30, "una decisión concreta para tu vida");
+  else ganar("m5", 15, "escribiste tu decisión");
+  guardarLeccion();
+  const lista = el("ul", {class:"desglose"}, ...L.desglose.map(([r, p]) => el("li", {}, el("span", {}, r), el("b", {}, `+${p}`))));
+  const resp = el("p", {class:"aviso-demo", role:"status"});
+  const pedir = (si) => { L.datos.pide_leccion_2 = si; resp.textContent = si ? "Listo: te avisamos cuando esté la lección 2." : "Está bien. Aquí estará cuando quieras volver."; };
+  pantalla(
+    el("div", {class:"cabecera"}, el("span", {class:"marca"}, "PRIOR"), el("span", {class:"criterio-total"}, `${L.criterio} Criterio`)),
+    el("h1", {class:"titulo"}, `Ganaste ${L.criterio} de Criterio`),
+    el("p", {class:"sublema"}, "Aquí no se premia acertar: se premia razonar. Así lo ganaste:"),
+    lista,
+    el("h2", {class:"subtitulo"}, "Lo que te llevas"),
+    el("ul", {class:"aprendido"}, ...L.conceptos.map(([t, d]) => el("li", {}, el("b", {}, t), el("span", {}, d)))),
+    t ? el("h2", {class:"subtitulo"}, "Tu decisión de esta semana") : null,
+    t ? el("div", {class:"tarjeta"}, el("p", {}, `“${t}”`)) : null,
+    usuario ? el("h2", {class:"subtitulo"}, "Invita a alguien") : null,
+    usuario ? (() => {
+      const enlace = `${location.origin}${location.pathname}?ref=${usuario.id.slice(0,8)}`;
+      const copiar = el("button", {class:"btn secundario", type:"button"}, "Copiar mi enlace");
+      copiar.addEventListener("click", async () => { try { await navigator.clipboard.writeText(enlace); copiar.textContent = "Enlace copiado"; } catch { copiar.textContent = enlace; } });
+      return el("div", {class:"tarjeta"}, el("p", {}, "Tu código"), el("div", {class:"codigo"}, usuario.id.slice(0,8).toUpperCase()), el("div", {style:"margin-top:12px"}, copiar));
+    })() : null,
+    el("p", {class:"pregunta-chica"}, "¿Quieres la lección 2 cuando esté lista?"),
+    el("div", {class:"acciones"},
+      el("button", {class:"btn", type:"button", onclick:() => pedir(true)}, "Sí, avísame"),
+      el("button", {class:"btn secundario", type:"button", onclick:() => pedir(false)}, "Ahora no"),
+      resp,
+      el("button", {class:"btn texto", type:"button", onclick:bienvenida}, "Volver al inicio"))
+  );
+}
+
+function final(){
+  const guia = el("div", {class:"guia"});
+  const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
+    L.paso = 0; L.criterio = 0; L.desglose = []; L.datos = {}; L.otorgado = new Set(); L.conceptos = []; L.inicio = Date.now(); PANTALLAS[0](); }}, "Empezar la lección");
+  pantalla(
+    el("div", {class:"marca"}, "PRIOR"),
+    el("h1", {class:"titulo"}, "Tu primera lección: Tasas, bancos y tu bolívar"),
+    el("p", {class:"sublema"}, "Economía · lección 1 · unos 8 minutos"),
+    guia,
+    el("div", {class:"acciones"}, empezar)
+  );
+  escribir(guia, [
+    {texto:"Primero decides con tu dinero, después descubres qué creencia te llevó a esa decisión, y al final lo llevas a tu vida."},
+    {texto:"Cada vez que piensas, ganas Criterio. Equivocarte no te quita nada: es parte de aprender."}
+  ], () => empezar.disabled = false);
+}
+
+bienvenida();
+</script>
+</body>
+</html>
