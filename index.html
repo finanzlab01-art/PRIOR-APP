@@ -206,6 +206,8 @@ textarea{width:100%; min-height:90px; font:inherit; color:var(--texto); backgrou
 .celebra .cuanto{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; font-size:30px; color:var(--principal); line-height:1.15}
 .celebra .porque{color:var(--texto2); margin-top:6px; font-size:16px}
 
+.cuenta{height:3px; border-radius:3px; background:var(--arena); overflow:hidden; margin-bottom:6px}
+.cuenta i{display:block; height:100%; width:0; background:var(--acento); transition:width linear}
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important; transition:none !important}
   .escena .sol-grande{transform:translate(-50%,0)}
@@ -423,7 +425,7 @@ function horizonte(paso, total){
   return h;
 }
 
-function pantalla(...hijos){ app.replaceChildren(...hijos); window.scrollTo(0,0); }
+function pantalla(...hijos){ app.replaceChildren(...hijos.filter(h => h != null && h !== false)); window.scrollTo(0,0); }
 
 /* ---------- Pantallas ---------- */
 function bienvenida(){
@@ -493,7 +495,8 @@ function escenario(){
     if (creenciaFuerte && !estado.creencias.includes(s.dogma)) estado.creencias.push(s.dogma);
   };
   // Sin juicio durante el test: al elegir solo se activa "Siguiente". Las consecuencias quedan guardadas para el diagnóstico final.
-  const continuar = () => { siguiente.disabled = false; siguiente.focus({preventScroll:true}); siguiente.scrollIntoView({behavior: reducido ? "auto":"smooth", block:"nearest"}); };
+  const continuar = (espera = reducido ? 250 : 650) => { siguiente.disabled = false; setTimeout(() => { if (siguiente.isConnected) siguiente.click(); }, espera); };
+  siguiente.classList.add("oculto");
   const mostrarConse = (html) => { conse.innerHTML = html; conse.classList.remove("oculto"); siguiente.disabled = false; siguiente.focus({preventScroll:true}); conse.scrollIntoView({behavior: reducido ? "auto":"smooth", block:"nearest"}); };
 
   const pintarOpciones = (destino, lista, alElegir) => {
@@ -520,6 +523,7 @@ function escenario(){
       estado.respuestas.push({id:s.id, opcion:"otra", texto:area.value.trim()});
       area.disabled = true; guardar.remove();
       mostrarConse("<b>Gracias.</b> Con respuestas como la tuya descubrimos formas de decidir que todavía no tenemos en la app. Esta situación no cuenta para tu mezcla.");
+      continuar(reducido ? 1500 : 3500);
     });
     caja.append(area, guardar); zona.after(caja); area.focus({preventScroll:true});
     caja.scrollIntoView({behavior: reducido ? "auto":"smooth", block:"nearest"});
@@ -670,6 +674,17 @@ const OPC_LECCION = ["Los pongo a plazo. 46% es más de lo que paga casi cualqui
   "Los cambio hoy a dólares y los guardo hasta que los necesite.",
   "Compro hoy cosas que sé que voy a usar en esos tres meses."];
 const OPC_CORTAS = ["Plazo al 46%", "Cuenta al 10%", "Dólares", "Comprar hoy lo que usaré"];
+// Pregunta de predicción según lo que eligió la persona en el momento 1.
+const PREDICCION = [
+  ["El banco te paga 46% al año. En septiembre los precios subieron 8,4% en un solo mes.",
+   {texto:"En tres meses, ¿tus bolívares a plazo compran más o menos que hoy?", clase:"pregunta"}],
+  ["La cuenta te paga 10% al año. En septiembre los precios subieron 8,4% en un solo mes.",
+   {texto:"En tres meses, ¿tus bolívares en la cuenta compran más o menos que hoy?", clase:"pregunta"}],
+  ["En septiembre el dólar oficial subió cerca de 3% y los precios subieron 8,4%, en un solo mes.",
+   {texto:"En tres meses, ¿tus dólares compran más o menos aquí que hoy?", clase:"pregunta"}],
+  ["Compraste hoy lo que vas a usar. En septiembre los precios subieron 8,4% en un solo mes.",
+   {texto:"Si hubieras esperado tres meses para comprarlo, ¿ese mismo dinero compraría más o menos?", clase:"pregunta"}]
+];
 const MOMENTOS = ["Decide", "Lo que pasó y la creencia", "La teoría", "Vuelve a decidir", "Llévalo a tu vida"];
 
 const L = { paso:0, criterio:0, desglose:[], datos:{}, otorgado:new Set(), conceptos:[], zona:null };
@@ -700,13 +715,14 @@ function ganar(clave, puntos, razon){
 }
 
 // Pantalla de lección: guía con burbujas, luego la interacción; "Seguir" se activa con listo().
-function pl({momento, burbujas, construir, boton="Seguir", saltable=false, concepto=null}){
+function pl({momento, burbujas, construir, boton="Seguir", saltable=false, concepto=null, auto=false}){
   const total = PANTALLAS.length;
   const guia = el("div", {class:"guia"});
   const zona = el("div", {});
   const seguir = el("button", {class:"btn", type:"button", disabled:true}, boton);
   seguir.addEventListener("click", () => { L.paso++; L.paso < total ? PANTALLAS[L.paso]() : cierre(); });
   const acciones = el("div", {class:"acciones"}, seguir);
+  if (auto) seguir.classList.add("oculto");
   if (saltable) acciones.append(el("button", {class:"btn texto", type:"button", onclick:() => { L.paso++; PANTALLAS[L.paso](); }}, "Saltar esta parte"));
   pantalla(
     el("div", {class:"cabecera"}, el("span", {class:"marca"}, "PRIOR"), el("span", {class:"criterio-total"}, `${L.criterio} Criterio`)),
@@ -715,8 +731,22 @@ function pl({momento, burbujas, construir, boton="Seguir", saltable=false, conce
     guia, zona, acciones
   );
   L.zona = zona;
+  const pasoActual = L.paso;
+  const avanzar = () => { if (L.paso === pasoActual && seguir.isConnected) seguir.click(); };
   const listo = () => {
     seguir.disabled = false;
+    if (auto) {
+      // Tiempo para leer la nota y la idea; un toque en la pantalla pasa de inmediato.
+      setTimeout(() => {
+        const texto = [...zona.querySelectorAll(".consecuencia, .concepto")].map(x => x.textContent).join(" ");
+        const espera = reducido ? 1200 : Math.min(1100 + texto.length * 38, 8000);
+        const barra = el("i"); const cuenta = el("div", {class:"cuenta", "aria-hidden":"true"}, barra);
+        acciones.prepend(cuenta);
+        requestAnimationFrame(() => requestAnimationFrame(() => { barra.style.transitionDuration = espera + "ms"; barra.style.width = "100%"; }));
+        app.addEventListener("click", avanzar, {once:true});
+        setTimeout(avanzar, espera);
+      }, 30);
+    }
     if (concepto && !zona.querySelector(".concepto")) setTimeout(() => {
       if (zona.querySelector(".concepto")) return;
       zona.append(el("div", {class:"concepto"}, el("small", {}, "La idea"), el("h3", {}, concepto[0]), el("p", {}, concepto[1])));
@@ -770,7 +800,7 @@ function barrasPoder(valores, tuya){
 
 const PANTALLAS = [
   // ---- Momento 1 · Decide
-  () => pl({momento:1, burbujas:[
+  () => pl({auto:true, momento:1, burbujas:[
       ...(grupoMoneda(estado.perfil.moneda) === "usd" ? [`Tú cobras en ${MONEDA_TEXTO[estado.perfil.moneda]}, pero igual pagas en bolívares. Esta lección parte de alguien que cobra en bolívares, porque explica cómo funciona el bolívar que usas cada día.`] : []),
       `Imagina que hoy te depositaron Bs. ${fmt(DATOS.sueldo)}. A la tasa BCV de hoy (${DATOS.tasaBCV} Bs por dólar) son unos 100 dólares.`,
       `La mitad, Bs. ${fmt(DATOS.mitad)}, no la vas a necesitar hasta dentro de tres meses.`,
@@ -779,14 +809,13 @@ const PANTALLAS = [
     construir:(z, listo) => elegir(z, OPC_LECCION, k => { L.datos.m1_opcion = LETRAS[k]; ganar("m1", 10, "decidiste sin miedo a equivocarte"); listo(); }) }),
 
   // ---- Momento 2 · Lo que pasó y la creencia
-  () => pl({momento:2, burbujas:[
+  () => pl({momento:2, auto:true, burbujas:[
       "Antes de ver qué pasó, predice.",
-      "El banco te paga 46% al año. En septiembre los precios subieron 8,4% en un solo mes.",
-      {texto:"En tres meses, ¿tus bolívares a plazo compran más o menos que hoy?", clase:"pregunta"}],
+      ...PREDICCION["ABCD".indexOf(L.datos.m1_opcion)] ],
     construir:(z, listo) => elegir(z, ["Más", "Lo mismo", "Menos", "Mucho menos"], k => {
       L.datos.m2_prediccion = ["mas","igual","menos","mucho_menos"][k];
       ganar("m2", 5, "hiciste tu predicción");
-      nota(z, k === 2 ? "<b>Bien leído.</b> Veamos cuánto menos." : "<b>Veamos qué pasa con los números.</b>");
+      nota(z, k >= 2 ? "<b>Bien leído.</b> Veamos cuánto menos." : "<b>Veamos qué pasa con los números.</b>");
       listo(); }) }),
 
   () => pl({momento:2, burbujas:["Esto es lo que pasa en tres meses si los precios siguen como en septiembre y la tasa como en octubre."],
@@ -830,7 +859,7 @@ const PANTALLAS = [
   },
 
   // ---- Momento 3a · El problema
-  () => pl({momento:3, burbujas:[
+  () => pl({auto:true, momento:3, burbujas:[
       "Un banco hace intermediación financiera: recibe depósitos, presta ese dinero y vive de la diferencia entre lo que cobra por prestar y lo que paga por guardar.",
       "En casi todo el mundo, tus ahorros en el banco se convierten en el crédito de alguien que compra una casa o abre un negocio.",
       {texto:"¿De dónde crees que sale el dinero que presta un banco?", clase:"pregunta"}],
@@ -878,7 +907,7 @@ const PANTALLAS = [
     },
     concepto:["Tasa real", "Lo que de verdad ganas: lo que te pagan descontando cuánto subieron los precios."] }),
 
-  () => pl({momento:3, burbujas:[
+  () => pl({auto:true, momento:3, burbujas:[
       "Si casi no pueden prestar y pagan intereses cada vez más altos, ¿de qué viven los bancos?",
       "De comisiones (transferencias, puntos de venta, mantenimiento), de operaciones de cambio de divisas y de créditos indexados.",
       "Los préstamos y tarjetas en bolívares se expresan en UVC (Unidad de Valor de Crédito), que se ajusta con el tipo de cambio oficial. Si el bolívar se devalúa, la deuda sube con él.",
@@ -890,7 +919,7 @@ const PANTALLAS = [
     concepto:["Crédito indexado (UVC)", "Una deuda que se ajusta con el tipo de cambio: si el bolívar cae, lo que debes sube."] }),
 
   // ---- Momento 3b · El impacto
-  () => pl({momento:3, burbujas:["Esto le causa cuatro efectos a tu dinero que vives sin verlos.", {texto:"¿Cuál vives más?", clase:"pregunta"}],
+  () => pl({auto:true, momento:3, burbujas:["Esto le causa cuatro efectos a tu dinero que vives sin verlos.", {texto:"¿Cuál vives más?", clase:"pregunta"}],
     construir:(z, listo) => {
       const efectos = [
         ["Huida del bolívar", "Nadie quiere guardar bolívares: todos los cambian apenas cobran. Esa demanda presiona la tasa, y la tasa presiona los precios. Es un círculo."],
@@ -947,7 +976,7 @@ const PANTALLAS = [
       "No hay un refugio fijo. Hay números que cambian, y se pueden leer."] }),
 
   // ---- Momento 4 · Vuelve a decidir
-  () => pl({momento:4, burbujas:[
+  () => pl({auto:true, momento:4, burbujas:[
       `Mismo cobro, mismos Bs. ${fmt(DATOS.mitad)} para dentro de tres meses.`,
       "Pero ahora el BCV deja de contener la tasa: se espera que el dólar oficial suba 10% al mes y los precios 9%.",
       {texto:"¿Qué haces?", clase:"pregunta"}],
@@ -958,7 +987,7 @@ const PANTALLAS = [
         : `<b>Resultado:</b> en tres meses compras ${v < 1 ? pct(1-v) + " menos" : pct(v-1) + " más"} que hoy.`);
       listo(); }) }),
 
-  () => pl({momento:4, burbujas:[{texto:"¿En qué te fijaste para decidir?", clase:"pregunta"}],
+  () => pl({auto:true, momento:4, burbujas:[{texto:"¿En qué te fijaste para decidir?", clase:"pregunta"}],
     construir:(z, listo) => elegir(z, [
         "Comparé lo que paga el banco con lo que suben los precios",
         "Comparé lo que sube el dólar con lo que suben los precios",
