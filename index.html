@@ -492,6 +492,8 @@ function escenario(){
     p.forEach((v,k) => estado.puntos[k] += v);
     if (creenciaFuerte && !estado.creencias.includes(s.dogma)) estado.creencias.push(s.dogma);
   };
+  // Sin juicio durante el test: al elegir solo se activa "Siguiente". Las consecuencias quedan guardadas para el diagnóstico final.
+  const continuar = () => { siguiente.disabled = false; siguiente.focus({preventScroll:true}); siguiente.scrollIntoView({behavior: reducido ? "auto":"smooth", block:"nearest"}); };
   const mostrarConse = (html) => { conse.innerHTML = html; conse.classList.remove("oculto"); siguiente.disabled = false; siguiente.focus({preventScroll:true}); conse.scrollIntoView({behavior: reducido ? "auto":"smooth", block:"nearest"}); };
 
   const pintarOpciones = (destino, lista, alElegir) => {
@@ -530,7 +532,7 @@ function escenario(){
         const [, consecuencia, p] = s.opciones[k];
         sumar(p, p[2] >= 3);
         estado.respuestas.push({id:s.id, opcion:LETRAS[k]});
-        mostrarConse(`<b>Lo que puede pasar:</b> ${consecuencia}`);
+        continuar();
       });
     } else {
       pintarOpciones(zona, s.paso1, r1 => {
@@ -550,7 +552,7 @@ function escenario(){
               else                          { p=[0,2,2]; msg="Confiabas un poco más de lo que sabías."; }
               sumar(p, p[2] >= 3);
               estado.respuestas.push({id:s.id, opcion:`${LETRAS[r1]}${LETRAS[k]}`});
-              mostrarConse(`<b>${msg}</b> ${s.explicacion}`);
+              continuar();
             });
           });
         }, reducido ? 0 : 250);
