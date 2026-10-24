@@ -114,10 +114,14 @@ button{font:inherit; color:inherit; cursor:pointer}
 .barra i{display:block; height:100%; width:0; background:var(--principal); border-radius:6px; transition:width 1s cubic-bezier(.2,.7,.2,1)}
 .materia.primera .barra i{background:var(--acento)}
 .materia p{margin:0; color:var(--texto2); font-size:14.5px}
-.creencias{margin-top:22px; padding:16px; border:1.5px dashed var(--arena); border-radius:14px}
-.creencias h2{font-size:16px; margin:0 0 8px}
-.creencias ul{margin:0; padding-left:18px}
-.creencias li{margin:4px 0}
+.porque{margin:0 0 6px}
+.creencias{margin-top:28px}
+.creencias h2{font-size:18px; margin:0 0 6px; color:var(--principal)}
+.creencias .tarjeta{margin-top:16px; border-left:4px solid var(--acento)}
+.creencias .tarjeta h3{margin-bottom:10px; color:var(--principal)}
+.creencias .tarjeta p + p{margin-top:10px}
+.creencias .tarjeta b{display:block; color:var(--texto); font-weight:600; font-size:14px}
+.invitacion{margin:28px 0 0; color:var(--texto2)}
 .nota{font-size:13px; color:var(--texto2); margin-top:14px}
 
 /* Cuenta */
@@ -220,21 +224,21 @@ const ESCENARIOS = [
     opciones:[
       ["Acepto los bolívares hoy y los uso en lo que necesito","Si después pagas cosas a tasa de mercado, pierdes la diferencia entre las dos tasas.",[2,1,1]],
       ["Acepto los bolívares hoy y los cambio a dólares para ahorrarlos","Cambias a tasa de mercado y pagas el costo del cambio: terminas con menos de 100 dólares.",[1,1,2]],
-      ["Espero la semana y cobro en dólares","El trato se puede caer, y pasas una semana sin el dinero.",[1,1,2]],
+      ["Espero la semana y cobro en dólares","El trato se puede caer, y pasas una semana sin el dinero.",[1,1,3]],
       ["Le propongo que me pague en bolívares a la tasa del mercado","La negociación puede enfriar la venta.",[0,1,1]] ] },
   { id:"E2", bloque:"Economía", dogma:"Gastar todo apenas cobras, por si acaso",
     variantes:{
       bs:{ contexto:"Imagina que hoy es tu día de cobro y te pagan en bolívares. Los precios suben un poco cada semana.",
         pregunta:"¿Qué haces con lo que no vas a gastar esta semana?",
         opciones:[
-          ["Lo gasto de una vez en lo del mes, antes de que suba","Compras de más y te quedas sin colchón para imprevistos.",[1,2,2]],
+          ["Lo gasto de una vez en lo del mes, antes de que suba","Compras de más y te quedas sin colchón para imprevistos.",[1,2,3]],
           ["Lo cambio a dólares y lo ahorro","Te cubres si sube el dólar; si los precios suben más que la tasa, ese ahorro también compra menos.",[1,1,2]],
           ["Lo dejo en la cuenta y lo voy usando","Pierde poder de compra mientras espera.",[3,1,1]],
           ["Pago lo fijo y reparto el resto entre bolívares y dólares","Cada cambio cuesta, y hay que estar pendiente de las dos monedas.",[1,1,0]] ] },
       usd:{ contexto:"Imagina que hoy es tu día de cobro y te pagan en {moneda}. Muchos de tus gastos son en bolívares y los precios suben un poco cada semana.",
         pregunta:"¿Cómo manejas lo del mes?",
         opciones:[
-          ["Cambio todo a bolívares hoy y pago todo de una vez","Los bolívares que no gastas enseguida pierden valor.",[2,1,1]],
+          ["Cambio todo a bolívares hoy y pago todo de una vez","Los bolívares que no gastas enseguida pierden valor.",[2,1,3]],
           ["Cambio a bolívares solo lo de cada semana","Más vueltas y más costos de cambio.",[0,1,0]],
           ["Ahorro todo en dólares y cambio solo cuando no me queda otra","Puedes terminar cambiando cuando la tasa te conviene menos.",[1,1,2]],
           ["Pago en dólares donde me lo acepten, aunque el precio sea más alto","El precio en dólares a veces es más caro que en bolívares a la tasa del día.",[2,1,1]] ] } } },
@@ -309,6 +313,46 @@ const MATERIAS = [
   { nombre:"Conducta y sociedad", frase:"Las creencias de la crisis que todavía deciden por ti." }
 ];
 
+// Resultado: por qué empieza la ruta en cada materia. {N} = decisiones donde pesó; {T} = decisiones que contaron.
+const POR_QUE = [
+  { con:"En {N} de tus {T} decisiones pesó más cómo se mueven la tasa, los precios y el bolívar. Por ahí empezamos: entender eso hace más fáciles todas las demás decisiones.",
+    sin:"En tus decisiones pesó más cómo se mueven la tasa, los precios y el bolívar. Por ahí empezamos: entender eso hace más fáciles todas las demás decisiones." },
+  { con:"En {N} de tus {T} decisiones, la duda estuvo en qué hacer con el dinero que sobra: dónde ponerlo, cuánto arriesgar y cómo repartirlo. Por ahí empezamos.",
+    sin:"En tus decisiones, la duda estuvo en qué hacer con el dinero que sobra: dónde ponerlo, cuánto arriesgar y cómo repartirlo. Por ahí empezamos." },
+  { con:"En {N} de tus {T} decisiones pesaron más las costumbres que dejó la crisis que los números del momento. Por ahí empezamos: no para borrarlas, sino para ver cuáles todavía te sirven.",
+    sin:"En tus decisiones pesaron más las costumbres que dejó la crisis que los números del momento. Por ahí empezamos: no para borrarlas, sino para ver cuáles todavía te sirven." }
+];
+const ELECCION_C3 = "Respondiste el cálculo de los porcentajes con mucha seguridad.";
+const CREENCIAS = {
+  "El efectivo en dólares es el refugio": {
+    porque:"Durante años el bolívar perdía valor tan rápido que tener dólares en la mano era la forma más segura de no perderlo todo. Y los bancos no siempre dejaban sacar tu dinero.",
+    revisar:"Cuánto pierde también el dólar guardado, y cuándo conviene tenerlo a la mano y cuándo no." },
+  "Gastar todo apenas cobras, por si acaso": {
+    porque:"Con precios que subían cada semana, gastar el mismo día era una forma de protegerte.",
+    revisar:"Cuándo gastar rápido te protege de verdad y cuándo te deja sin colchón para imprevistos." },
+  "Lo de hoy vale más, aunque cueste mañana": {
+    porque:"Cuando no sabes cuánto costarán las cosas mañana, asegurar hoy lo que puedes tener es una reacción lógica.",
+    revisar:"Cómo pesar una compra de hoy contra lo que vas a deber después, y cuándo dos compromisos a la vez se vuelven un problema." },
+  "Si a otros les funciona, a mí también": {
+    porque:"Cuando hay poca información confiable, seguir a alguien cercano que ya lo hizo es la forma más rápida de decidir.",
+    revisar:"Qué preguntar antes de seguir un consejo, y por qué lo que le sirve a otra persona depende de su situación, no de la tuya." },
+  "Invertir es peligroso, o es copiar al que le va bien": {
+    porque:"Mucha gente vio perder ahorros en crisis, estafas o empresas que cayeron. Desconfiar tiene razones.",
+    revisar:"Qué es el riesgo y cómo se reparte, para que invertir no sea ni un salto al vacío ni una copia." },
+  "El efectivo como refugio, o todo a una sola apuesta": {
+    porque:"Cuando todo parece incierto, uno tiende a los extremos: guardarlo todo o ponerlo todo en lo que parece que va a subir.",
+    revisar:"Cómo repartir un dinero extra entre emergencias y opciones distintas, para no depender de una sola." },
+  "Cuando sube el dólar, hay que correr": {
+    porque:"En años de devaluación fuerte, cada día de espera costaba. Cambiar rápido era una defensa real.",
+    revisar:"Cómo leer una subida del dólar junto con lo que pasa con los precios, antes de correr a cambiar." },
+  "Esperar es la mejor defensa": {
+    porque:"Si las reglas cambian cada poco tiempo, esperar a que todo se calme parece lo más prudente.",
+    revisar:"Cuánto cuesta esperar, y cómo dar pasos pequeños aunque el panorama no esté claro." },
+  "Sé manejar mi dinero": {
+    porque:"Sobrevivir años de crisis enseña muchísimo, y es natural confiar en lo que ya aprendiste.",
+    revisar:"Algunos cálculos que engañan a casi todos, como los porcentajes que suben y bajan, y cómo comprobar antes de confiar." }
+};
+
 /* ---------- Conexión con Supabase ---------- */
 // Pega aquí la URL del proyecto y la clave pública (anon o publishable). Nunca la clave service_role.
 const SUPABASE_URL = "https://lhwajunwenugsmpuonyx.supabase.co";
@@ -374,7 +418,7 @@ async function guardarLeccion(){
 }
 
 /* ---------- Estado ---------- */
-const estado = { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], perfil:{} };
+const estado = { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{} };
 const app = document.getElementById("app");
 const reducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -443,7 +487,7 @@ function bienvenida(){
   registrarPaso("bienvenida");
   const guia = el("div", {class:"guia"});
   const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
-    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], perfil:{} });
+    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{} });
     perfil(0); }}, "Empezar");
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
@@ -504,9 +548,12 @@ function escenario(){
     el("div", {class:"acciones"}, siguiente)
   );
 
-  const sumar = (p, creenciaFuerte) => {
-    p.forEach((v,k) => estado.puntos[k] += v);
-    if (creenciaFuerte && !estado.creencias.includes(s.dogma)) estado.creencias.push(s.dogma);
+  const sumar = (p, creenciaFuerte, eleccion) => {
+    p.forEach((v,k) => { estado.puntos[k] += v; if (v >= 2) estado.pesos[k]++; });
+    if (creenciaFuerte && !estado.creencias.includes(s.dogma)) {
+      estado.creencias.push(s.dogma);
+      estado.detalleCreencias.push({ dogma: s.dogma, eleccion });
+    }
   };
   // Sin juicio durante el test: al elegir solo se activa "Siguiente". Las consecuencias quedan guardadas para el diagnóstico final.
   const continuar = (espera = reducido ? 250 : 650) => { siguiente.disabled = false; setTimeout(() => { if (siguiente.isConnected) siguiente.click(); }, espera); };
@@ -547,8 +594,8 @@ function escenario(){
     if (s.tipo !== "dos_pasos") {
       pintarOpciones(zona, [...s.opciones.map(o => o[0]), "Otra respuesta"], k => {
         if (k === s.opciones.length) return otraRespuesta();
-        const [, consecuencia, p] = s.opciones[k];
-        sumar(p, p[2] >= 3);
+        const [texto, consecuencia, p] = s.opciones[k];
+        sumar(p, p[2] >= 3, texto);
         estado.respuestas.push({id:s.id, opcion:LETRAS[k]});
         continuar();
       });
@@ -568,7 +615,7 @@ function escenario(){
               else if (nose || adivina)     { p=[0,3,0]; msg="Reconoces lo que no sabes: es un buen punto de partida."; }
               else if (k === 0)             { p=[0,2,3]; msg="Estabas muy seguro de algo que no era así."; }
               else                          { p=[0,2,2]; msg="Confiabas un poco más de lo que sabías."; }
-              sumar(p, p[2] >= 3);
+              sumar(p, p[2] >= 3, ELECCION_C3);
               estado.respuestas.push({id:s.id, opcion:`${LETRAS[r1]}${LETRAS[k]}`});
               continuar();
             });
@@ -616,18 +663,32 @@ function resultado(){
     requestAnimationFrame(() => requestAnimationFrame(() => barra.style.width = `${mezcla[k]}%`));
     return f;
   });
-  const creencias = estado.creencias.length ? el("section", {class:"creencias"},
+  // Por qué: cuántas de las decisiones que contaron pesaron en la materia que sale primera.
+  const contaron = ESCENARIOS.length - estado.respuestas.filter(r => r.opcion === "otra").length;
+  const n = estado.pesos[primera];
+  const porque = n >= 2 ? POR_QUE[primera].con.replace("{N}", n).replace("{T}", contaron) : POR_QUE[primera].sin;
+
+  const linea = (etiqueta, texto) => el("p", {}, el("b", {}, etiqueta), texto);
+  const creencias = estado.detalleCreencias.length ? el("section", {class:"creencias"},
     el("h2", {}, "Creencias que vamos a revisar contigo"),
-    el("ul", {}, ...estado.creencias.slice(0,3).map(c => el("li", {}, c))),
-    el("p", {class:"nota"}, "Tuvieron sentido en la crisis. Vamos a ver si todavía te sirven.")) : null;
+    el("p", {class:"sublema"}, "Ninguna es un error. Son formas de decidir que aprendimos en años difíciles."),
+    ...estado.detalleCreencias.slice(0,3).map(({dogma, eleccion}) => el("div", {class:"tarjeta"},
+      el("h3", {}, dogma),
+      linea("Lo que elegiste:", eleccion === ELECCION_C3 ? eleccion : `«${eleccion}»`),
+      linea("Por qué tiene sentido:", CREENCIAS[dogma].porque),
+      linea("Lo que vamos a revisar:", CREENCIAS[dogma].revisar))))
+    : el("section", {class:"creencias"}, el("div", {class:"tarjeta"},
+      el("p", {}, "No apareció ninguna creencia fuerte en tus decisiones. Es una buena base: tu ruta se va a enfocar más en afinar cómo lees los números que en revisar costumbres.")));
 
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
     el("h1", {class:"titulo"}, `Tu ruta empieza por ${MATERIAS[primera].nombre.toLowerCase()}.`),
-    el("p", {class:"sublema"}, "Esta es tu mezcla: cuánto de cada materia va a tener tu ruta. Ninguna baja de 20%, para que no te saltes nada."),
-    el("div", {class:"mezcla"}, ...filas),
+    el("p", {class:"porque"}, porque),
     creencias,
-    el("div", {class:"acciones"}, el("button", {class:"btn", type:"button", onclick:cuenta}, "Guardar mi resultado"))
+    el("p", {class:"sublema", style:"margin-top:32px"}, "Esta es tu mezcla: cuánto de cada materia va a tener tu ruta. Ninguna baja de 20%, para que no te saltes nada."),
+    el("div", {class:"mezcla"}, ...filas),
+    usuario ? null : el("p", {class:"invitacion"}, "Crea tu cuenta para guardar tu ruta y empezar tu primera lección: Tasas, bancos y tu bolívar."),
+    el("div", {class:"acciones"}, el("button", {class:"btn", type:"button", onclick:cuenta}, usuario ? "Seguir a mi primera lección" : "Guardar mi ruta"))
   );
 }
 
