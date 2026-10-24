@@ -328,13 +328,24 @@ const VISITA = (() => {
 })();
 const pasosEnviados = new Set((() => { try { return JSON.parse(sessionStorage.getItem("prior_pasos")) || []; } catch { return []; } })());
 
-function registrarPaso(paso){
-  if (!sb || !VISITA || pasosEnviados.has(paso)) return;
-  pasosEnviados.add(paso);
-  try { sessionStorage.setItem("prior_pasos", JSON.stringify([...pasosEnviados])); } catch {}
+const pasosEnCamino = new Set();   // en memoria: evita mandar el mismo paso dos veces a la vez
+
+function registrarPaso(paso, intento = 1){
+  if (!sb || !VISITA || pasosEnviados.has(paso) || pasosEnCamino.has(paso)) return;
+  pasosEnCamino.add(paso);
+  const fallo = (motivo) => {
+    pasosEnCamino.delete(paso);
+    if (intento === 1) setTimeout(() => registrarPaso(paso, 2), 3000);
+    else console.error("No se registró el paso:", motivo);
+  };
   sb.from("visitas_pasos").insert({ visita: VISITA, paso, invitado_por: REF ? REF.slice(0, 20) : null })
-    .then(({ error }) => { if (error) console.error("No se registró el paso:", error.message); })
-    .catch(e => console.error("No se registró el paso:", e));
+    .then(({ error }) => {
+      if (error) return fallo(error.message);
+      pasosEnCamino.delete(paso);
+      pasosEnviados.add(paso);
+      try { sessionStorage.setItem("prior_pasos", JSON.stringify([...pasosEnviados])); } catch {}
+    })
+    .catch(fallo);
 }
 let usuario = null;
 if (sb) sb.auth.getSession().then(({data}) => { usuario = data.session?.user || null; });
