@@ -315,6 +315,27 @@ const SUPABASE_URL = "https://lhwajunwenugsmpuonyx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_teUafx3VaEPWDXm43SD9-g_1910NoJj";
 const sb = (SUPABASE_URL && SUPABASE_KEY && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 const REF = new URLSearchParams(location.search).get("ref");   // código de quien invitó
+
+// Medición anónima: hasta qué pantalla llega cada visita (una visita = una pestaña).
+const VISITA = (() => {
+  let v = null;
+  try { v = sessionStorage.getItem("prior_visita"); } catch {}
+  if (!v) {
+    try { v = crypto.randomUUID(); } catch { return null; }
+    try { sessionStorage.setItem("prior_visita", v); } catch {}
+  }
+  return v;
+})();
+const pasosEnviados = new Set((() => { try { return JSON.parse(sessionStorage.getItem("prior_pasos")) || []; } catch { return []; } })());
+
+function registrarPaso(paso){
+  if (!sb || !VISITA || pasosEnviados.has(paso)) return;
+  pasosEnviados.add(paso);
+  try { sessionStorage.setItem("prior_pasos", JSON.stringify([...pasosEnviados])); } catch {}
+  sb.from("visitas_pasos").insert({ visita: VISITA, paso, invitado_por: REF ? REF.slice(0, 20) : null })
+    .then(({ error }) => { if (error) console.error("No se registró el paso:", error.message); })
+    .catch(e => console.error("No se registró el paso:", e));
+}
 let usuario = null;
 if (sb) sb.auth.getSession().then(({data}) => { usuario = data.session?.user || null; });
 
@@ -408,6 +429,7 @@ function pantalla(...hijos){ app.replaceChildren(...hijos.filter(h => h != null 
 
 /* ---------- Pantallas ---------- */
 function bienvenida(){
+  registrarPaso("bienvenida");
   const guia = el("div", {class:"guia"});
   const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
     Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], perfil:{} });
@@ -429,6 +451,7 @@ function bienvenida(){
 
 // Mini perfil: adapta las situaciones a la moneda en que cobra la persona.
 function perfil(n){
+  registrarPaso(`perfil_${n+1}`);
   const q = PERFIL_PREGUNTAS[n];
   const guia = el("div", {class:"guia"});
   const zona = el("div", {class:"opciones oculto"});
@@ -449,6 +472,7 @@ function perfil(n){
 const plantilla = t => t.replace("{moneda}", MONEDA_TEXTO[estado.perfil.moneda] || "dólares");
 
 function escenario(){
+  registrarPaso(`situacion_${estado.i+1}`);
   const base = ESCENARIOS[estado.i];
   const s = base.variantes ? { ...base, ...base.variantes[grupoMoneda(estado.perfil.moneda)] } : base;
   const guia = el("div", {class:"guia"});
@@ -567,6 +591,7 @@ function calcularMezcla(puntos){
 }
 
 function resultado(){
+  registrarPaso("resultado");
   const mezcla = calcularMezcla(estado.puntos);
   estado.mezcla = mezcla;
   const orden = [0,1,2].sort((a,b) => mezcla[b] - mezcla[a]);
@@ -596,7 +621,8 @@ function resultado(){
 }
 
 function cuenta(){
-  if (usuario) { guardarDiagnostico(); return final(); }
+  if (usuario) { registrarPaso("con_sesion"); guardarDiagnostico(); return final(); }
+  registrarPaso("cuenta");
   const correo = el("input", {type:"email", autocomplete:"email", inputmode:"email", placeholder:"tu@correo.com"});
   const clave = el("input", {type:"password", autocomplete:"new-password", placeholder:"Mínimo 6 caracteres"});
   const error = el("p", {class:"error", role:"alert"});
@@ -614,6 +640,7 @@ function cuenta(){
     if (e) { error.textContent = traducirError(e.message); return; }
     if (!data.session) { error.textContent = "Te enviamos un correo para confirmar la cuenta. Confírmala y vuelve a tocar “Ya tengo cuenta”."; return; }
     usuario = data.session.user;
+    registrarPaso("cuenta_creada");
     await guardarDiagnostico();
     final();
   };
@@ -628,7 +655,7 @@ function cuenta(){
     error,
     el("p", {class:"privacidad"}, "Guardamos tus respuestas para mejorar PRIOR. Nunca te pedimos montos ni dónde guardas tu dinero."),
     el("div", {class:"acciones"}, crear, entrar,
-      el("button", {class:"btn texto", type:"button", onclick:final}, "Seguir sin guardar"))
+      el("button", {class:"btn texto", type:"button", onclick:() => { registrarPaso("sin_cuenta"); final(); }}, "Seguir sin guardar"))
   );
 }
 
@@ -684,6 +711,7 @@ function ganar(clave, puntos, razon){
 // Pantalla de lección: guía con burbujas, luego la interacción; "Seguir" se activa con listo().
 function pl({momento, burbujas, construir, boton="Seguir", saltable=false, concepto=null, auto=false}){
   const total = PANTALLAS.length;
+  registrarPaso(`leccion_${L.paso+1}`);
   const guia = el("div", {class:"guia"});
   const zona = el("div", {});
   const seguir = el("button", {class:"btn", type:"button", disabled:true}, boton);
@@ -996,6 +1024,7 @@ const PANTALLAS = [
 function esConcreta(t){ return t.length >= 25 && /(hoy|mañana|lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo|semana|día|dia|quincena|cobro|cuando)/i.test(t); }
 
 function cierre(){
+  registrarPaso("leccion_fin");
   L.zona = null;
   const t = L.datos.m5_texto || "";
   if (esConcreta(t)) ganar("m5", 3, "una decisión concreta para tu vida");
@@ -1027,6 +1056,7 @@ function cierre(){
 }
 
 function final(){
+  registrarPaso("leccion_intro");
   const guia = el("div", {class:"guia"});
   const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
     L.paso = 0; L.criterio = 0; L.desglose = []; L.datos = {}; L.otorgado = new Set(); L.conceptos = []; L.inicio = Date.now(); PANTALLAS[0](); }}, "Empezar la lección");
