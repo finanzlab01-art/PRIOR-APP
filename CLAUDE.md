@@ -13,6 +13,10 @@ Lema: "El futuro se practica." Subtítulo: "Equivócate aquí. Acierta afuera."
   `leccion_resultados`. Seguridad por fila activa: cada persona solo ve y escribe lo suyo.
 - En el código va SOLO la clave publishable de Supabase. Nunca la clave de servicio.
 - Invitaciones con `?ref=` en el enlace.
+- Medición anónima en la tabla `visitas_pasos` (solo insertar; uuid de visita por pestaña en
+  sessionStorage, cada paso una vez por visita, sin datos personales). Pasos: `bienvenida`,
+  `perfil_1`–`perfil_2`, `situacion_1`–`situacion_10`, `resultado`, `cuenta`, `cuenta_creada`,
+  `con_sesion`, `sin_cuenta`, `leccion_intro`, `leccion_1`–`leccion_N` (N = pantallas de la lección), `leccion_fin`.
 
 ## Cómo funciona hoy
 - Mini perfil (edad y moneda en que cobra) y diagnóstico v4: 10 situaciones, con opción
