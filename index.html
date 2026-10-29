@@ -505,7 +505,7 @@ function bienvenida(){
     el("div", {class:"acciones"}, empezar)
   );
   escribir(guia, [
-    {texto:"Hola. Antes de enseñarte algo, quiero ver cómo decides."},
+    {texto:"Hola. Antes de enseñarte algo, quiero ver cómo decides tú."},
     {texto:`Primero, dos preguntas rápidas sobre ti. Después, ${ESCENARIOS.length} situaciones. No hay respuestas correctas: elige lo que harías de verdad.`}
   ], () => empezar.disabled = false);
 }
