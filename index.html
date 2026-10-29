@@ -6,6 +6,12 @@
 <meta name="color-scheme" content="light dark">
 <title>PRIOR · El futuro se practica.</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231B2A4A'/%3E%3Ccircle cx='32' cy='38' r='11' fill='%23E8A33D'/%3E%3Crect x='10' y='38' width='44' height='16' fill='%231B2A4A'/%3E%3Crect x='10' y='37' width='44' height='2.5' fill='%237FB3D5'/%3E%3C/svg%3E">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1B2A4A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PRIOR">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -1118,6 +1124,7 @@ function cierre(){
       copiar.addEventListener("click", async () => { try { await navigator.clipboard.writeText(enlace); copiar.textContent = "Enlace copiado"; } catch { copiar.textContent = enlace; } });
       return el("div", {class:"tarjeta"}, el("p", {}, "Tu código"), el("div", {class:"codigo"}, usuario.id.slice(0,8).toUpperCase()), el("div", {style:"margin-top:12px"}, copiar));
     })() : null,
+    avisoInstalar(),
     el("p", {class:"pregunta-chica"}, "¿Quieres la lección 2 cuando esté lista?"),
     el("div", {class:"acciones"},
       el("button", {class:"btn", type:"button", onclick:() => pedir(true)}, "Sí, avísame"),
@@ -1126,6 +1133,33 @@ function cierre(){
       el("button", {class:"btn texto", type:"button", onclick:bienvenida}, "Volver al inicio"))
   );
 }
+
+/* ---------- Instalar como app (PWA) ---------- */
+let pedidoInstalar = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); pedidoInstalar = e; });
+addEventListener("appinstalled", () => { pedidoInstalar = null; });
+
+// Solo se muestra si no está instalada: en iPhone con instrucciones; en Android si el navegador ofrece instalar.
+function avisoInstalar(){
+  if (matchMedia("(display-mode: standalone)").matches || navigator.standalone === true) return null;
+  const titulo = el("p", {}, el("b", {}, "Instala PRIOR en tu teléfono"));
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (ios) return el("div", {class:"tarjeta"}, titulo, el("p", {class:"nota"}, "Ábrela en Safari, toca Compartir y luego Añadir a pantalla de inicio"));
+  if (!pedidoInstalar) return null;
+  const caja = el("div", {class:"tarjeta"}, titulo);
+  const boton = el("button", {class:"btn secundario", type:"button", style:"margin-top:12px"}, "Instalar");
+  boton.addEventListener("click", async () => {
+    const p = pedidoInstalar; if (!p) return;
+    pedidoInstalar = null;
+    p.prompt();
+    try { await p.userChoice; } catch {}
+    caja.remove();
+  });
+  caja.append(boton);
+  return caja;
+}
+
+if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
 
 function final(){
   registrarPaso("leccion_intro");
