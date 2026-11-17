@@ -63,8 +63,8 @@ button{font:inherit; color:inherit; cursor:pointer}
   padding:16px 18px; max-width:92%; min-height:1.6em;
 }
 .burbuja.pregunta{font-weight:600}
-.cursor::after{content:"▍"; color:var(--acento); animation:parpadeo 1s steps(1) infinite}
-@keyframes parpadeo{50%{opacity:0}}
+.burbuja.entra{animation:entra .3s ease both}
+@keyframes entra{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
 .saltar{font-size:13px; color:var(--texto2); background:none; border:0; padding:4px 0; align-self:flex-start}
 
 /* Opciones */
@@ -440,7 +440,7 @@ const el = (tag, attrs={}, ...hijos) => {
   return n;
 };
 
-// Burbujas que se escriben una a una; un toque las completa todas.
+// Burbujas que aparecen una a una como mensajes; un toque las muestra todas.
 function escribir(contenedor, textos, alTerminar){
   let saltado = false, timers = [];
   const burbujas = textos.map(t => {
@@ -461,15 +461,12 @@ function escribir(contenedor, textos, alTerminar){
   const siguiente = () => {
     if (saltado) return;
     if (k >= burbujas.length) { saltado = true; boton.remove(); alTerminar && alTerminar(); return; }
-    const b = burbujas[k++], txt = b.dataset.texto; contenedor.append(b); b.classList.add("cursor");
-    let j = 0;
-    const tecla = () => {
-      if (saltado) return;
-      b.textContent = txt.slice(0, ++j);
-      if (j < txt.length) timers.push(setTimeout(tecla, 16));
-      else { b.classList.remove("cursor"); timers.push(setTimeout(siguiente, 320)); }
-    };
-    tecla();
+    // Cada burbuja aparece completa (como un mensaje); la pausa depende de lo largo del texto
+    // para que alcance a leerse, sin la sensación de apuro de ver el texto escribiéndose.
+    const b = burbujas[k++], txt = b.dataset.texto;
+    b.textContent = txt; b.classList.add("entra"); contenedor.append(b);
+    const pausa = Math.min(2400, 700 + txt.length * 22);
+    timers.push(setTimeout(siguiente, pausa));
   };
   siguiente();
 }
