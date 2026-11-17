@@ -737,9 +737,9 @@ function cuenta(){
 /* ================= Lección E1: Tasas, bancos y tu bolívar (guion v2, 13 oct 2026) ================= */
 // Cifras que caducan: en la app real viven en una tabla editable de Supabase.
 const DATOS = {
-  sueldo:87680, mitad:43840, tasaBCV:"876,80", plazo:0.46, cuenta:0.10, ahorro:0.42,
-  inflMes:0.084, inflAnual:4.65, dolarMes:0.033, costoCambio:0.99,
-  encajeVista:73, encajePlazo:50, fuente:"Cifras ilustrativas con datos del BCV y análisis publicados en septiembre y octubre de 2026."
+  sueldo:91575, mitad:45787.5, tasaBCV:"915,75", tasaFecha:"17 nov 2026", plazo:0.46, cuenta:0.10, ahorro:0.42,
+  inflMes:0.062, inflAnual:3.769, dolarMes:0.035, costoCambio:0.99,
+  encajeVista:73, encajePlazo:50, fuente:"Cifras ilustrativas con datos del BCV: tasa oficial del 17 de noviembre de 2026; inflación de octubre de 2026 (mensual 6,2%; doce meses 376,9%)."
 };
 const fmt = n => n.toLocaleString("es-VE", {maximumFractionDigits:0});
 const pct = (n, d=1) => (n*100).toLocaleString("es-VE", {minimumFractionDigits:d, maximumFractionDigits:d}) + "%";
@@ -757,13 +757,13 @@ const OPC_LECCION = ["Los pongo a plazo. 46% es más de lo que paga casi cualqui
 const OPC_CORTAS = ["Plazo al 46%", "Cuenta al 10%", "Dólares", "Comprar hoy lo que usaré"];
 // Pregunta de predicción según lo que eligió la persona en el momento 1.
 const PREDICCION = [
-  ["El banco te paga 46% al año. En septiembre los precios subieron 8,4% en un solo mes.",
+  ["El banco te paga 46% al año. En octubre los precios subieron 6,2% en un solo mes.",
    {texto:"En tres meses, ¿tus bolívares a plazo compran más o menos que hoy?", clase:"pregunta"}],
-  ["La cuenta te paga 10% al año. En septiembre los precios subieron 8,4% en un solo mes.",
+  ["La cuenta te paga 10% al año. En octubre los precios subieron 6,2% en un solo mes.",
    {texto:"En tres meses, ¿tus bolívares en la cuenta compran más o menos que hoy?", clase:"pregunta"}],
-  ["En septiembre el dólar oficial subió cerca de 3% y los precios subieron 8,4%, en un solo mes.",
+  ["En octubre el dólar oficial subió cerca de 3,5% y los precios subieron 6,2%, en un solo mes.",
    {texto:"En tres meses, ¿tus dólares compran más o menos aquí que hoy?", clase:"pregunta"}],
-  ["Compraste hoy lo que vas a usar. En septiembre los precios subieron 8,4% en un solo mes.",
+  ["Compraste hoy lo que vas a usar. En octubre los precios subieron 6,2% en un solo mes.",
    {texto:"Si hubieras esperado tres meses para comprarlo, ¿ese mismo dinero compraría más o menos?", clase:"pregunta"}]
 ];
 const MOMENTOS = ["Decide", "Lo que pasó y la creencia", "La teoría", "Vuelve a decidir", "Llévalo a tu vida"];
@@ -872,7 +872,7 @@ const PANTALLAS = [
   // ---- Momento 1 · Decide
   () => pl({auto:true, momento:1, burbujas:[
       ...(grupoMoneda(estado.perfil.moneda) === "usd" ? [`Tú cobras en ${MONEDA_TEXTO[estado.perfil.moneda]}, pero igual pagas en bolívares. Esta lección parte de alguien que cobra en bolívares, porque explica cómo funciona el bolívar que usas cada día.`] : []),
-      `Imagina que hoy te depositaron Bs. ${fmt(DATOS.sueldo)}. A la tasa BCV de hoy (${DATOS.tasaBCV} Bs por dólar) son unos 100 dólares.`,
+      `Imagina que hoy te depositaron Bs. ${fmt(DATOS.sueldo)}. A la tasa BCV del ${DATOS.tasaFecha} (${DATOS.tasaBCV} Bs por dólar) son unos 100 dólares.`,
       `La mitad, Bs. ${fmt(DATOS.mitad)}, no la vas a necesitar hasta dentro de tres meses.`,
       "Tu banco te ofrece ponerla en un depósito a plazo al 46% anual.",
       {texto:`¿Qué haces con los Bs. ${fmt(DATOS.mitad)}?`, clase:"pregunta"}],
@@ -888,7 +888,7 @@ const PANTALLAS = [
       nota(z, k >= 2 ? "<b>Bien leído.</b> Veamos cuánto menos." : "<b>Veamos qué pasa con los números.</b>");
       listo(); }) }),
 
-  () => pl({momento:2, burbujas:["Esto es lo que pasa en tres meses si los precios siguen como en septiembre y la tasa como en octubre."],
+  () => pl({momento:2, burbujas:["Esto es lo que pasa en tres meses si los precios y la tasa siguen como en octubre."],
     construir:(z, listo) => {
       const op = "ABCD".indexOf(L.datos.m1_opcion);
       const precio = DATOS.mitad * Math.pow(1+DATOS.inflMes, 3);
@@ -900,9 +900,9 @@ const PANTALLAS = [
         ["D · Comprar hoy", 1]], op));
       z.append(el("p", {class:"leyenda"}, "La barra muestra cuánto compra tu dinero comparado con hoy; la raya marca “igual que hoy”."));
       const textos = [
-        `A plazo recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.plazo*3/12))}, pero compras 12,5% menos que hoy.`,
-        `En la cuenta recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.cuenta*3/12))} y compras 19,5% menos.`,
-        "Conservas 50 dólares, pero la tasa subió unos 3% al mes y los precios 8%. Tus dólares compran unos 14% menos aquí. Sí, los dólares también pierden.",
+        `A plazo recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.plazo*3/12))}, pero compras ${pct(1-poder(0, DATOS.inflMes, DATOS.dolarMes))} menos que hoy.`,
+        `En la cuenta recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.cuenta*3/12))} y compras ${pct(1-poder(1, DATOS.inflMes, DATOS.dolarMes))} menos.`,
+        `Conservas 50 dólares, pero la tasa subió cerca de 3,5% al mes y los precios 6,2%. Tus dólares compran unos ${pct(1-poder(2, DATOS.inflMes, DATOS.dolarMes), 0)} menos aquí. Sí, los dólares también pierden.`,
         "Congelas el precio de esas cosas. Funciona solo con lo que de verdad vas a usar y puedes guardar."];
       nota(z, `<b>Tu opción:</b> ${textos[op]}`);
       z.append(el("p", {class:"fuente"}, DATOS.fuente));
@@ -964,14 +964,14 @@ const PANTALLAS = [
 
   () => pl({momento:3, burbujas:[
       `El BCV también fija cuánto deben pagar los bancos como mínimo al año: 10% en la cuenta a la vista, 42% en ahorro y 46% a plazo.`,
-      "Pero los precios subieron 465% en los últimos doce meses.",
+      `Pero los precios subieron ${Math.round(DATOS.inflAnual*100)}% en los últimos doce meses (hasta octubre).`,
       "La tasa real es lo que te pagan descontando la inflación. Mueve la inflación y mira qué pasa con un depósito al 46%."],
     construir:(z, listo) => {
       const cifra = el("p", {class:"cifra"});
       const calc = v => { const r = (1+DATOS.plazo)/(1+v/100) - 1; cifra.textContent = `Tasa real: ${r >= 0 ? "+" : ""}${pct(r,0)} al año`; };
-      calc(465);
+      calc(Math.round(DATOS.inflAnual*100));
       let movido = false;
-      z.append(slider("Inflación anual", 0, 600, 5, 465, v => `${v}%`, v => { calc(v); if (!movido) { movido = true; ganar("m3c", 1, "probaste la tasa real"); listo(); } }));
+      z.append(slider("Inflación anual", 0, 600, 1, Math.round(DATOS.inflAnual*100), v => `${v}%`, v => { calc(v); if (!movido) { movido = true; ganar("m3c", 1, "probaste la tasa real"); listo(); } }));
       z.append(cifra, el("p", {class:"formula"}, "Tasa real = (1 + tasa) / (1 + inflación) − 1"));
       z.append(el("div", {class:"tarjeta"}, el("p", {}, "Cuando un país mantiene a propósito tasas por debajo de la inflación y limita el crédito, los economistas lo llaman represión financiera.")));
     },
