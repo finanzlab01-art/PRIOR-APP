@@ -15,8 +15,9 @@ Lema: "El futuro se practica." Subtítulo: "Equivócate aquí. Acierta afuera."
 - Invitaciones con `?ref=` en el enlace.
 - Medición anónima en la tabla `visitas_pasos` (solo insertar; uuid de visita por pestaña en
   sessionStorage, cada paso una vez por visita, sin datos personales). Pasos: `bienvenida`,
-  `perfil_1`–`perfil_2`, `situacion_1`–`situacion_10`, `resultado`, `cuenta`, `cuenta_creada`,
-  `con_sesion`, `sin_cuenta`, `leccion_intro`, `leccion_1`–`leccion_N` (N = pantallas de la lección), `leccion_fin`.
+  `perfil_1`–`perfil_2`, `situacion_1`–`situacion_10`, `resultado`, `con_sesion`,
+  `leccion_intro`, `leccion_1`–`leccion_N` (N = pantallas de la lección), `leccion_fin`, y después, solo si no había sesión:
+  `cuenta`, `cuenta_creada` o `sin_cuenta`. La cuenta se pide al terminar la lección 1, no antes.
 
 ## Cómo funciona hoy
 - Mini perfil (edad y moneda en que cobra) y diagnóstico v4: 10 situaciones, con opción

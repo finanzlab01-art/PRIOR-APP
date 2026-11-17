@@ -409,7 +409,8 @@ const traducirError = (m="") =>
   "No se pudo completar. Inténtalo otra vez.";
 
 async function guardarDiagnostico(){
-  if (!sb || !usuario) return;
+  if (!sb || !usuario || estado.diagGuardado) return;
+  estado.diagGuardado = true;
   const { error } = await sb.from("diagnostico_resultados").insert({
     user_id: usuario.id, correo: usuario.email, perfil: estado.perfil, respuestas: estado.respuestas,
     puntos: estado.puntos, maximos: estado.maximos, mezcla: estado.mezcla, creencias: estado.creencias, invitado_por: REF });
@@ -690,13 +691,20 @@ function resultado(){
     creencias,
     el("p", {class:"sublema", style:"margin-top:32px"}, "Esta es tu mezcla: cuánto de cada materia va a tener tu ruta. Ninguna baja de 20%, para que no te saltes nada."),
     el("div", {class:"mezcla"}, ...filas),
-    usuario ? null : el("p", {class:"invitacion"}, "Crea tu cuenta para guardar tu ruta y empezar tu primera lección: Tasas, bancos y tu bolívar."),
-    el("div", {class:"acciones"}, el("button", {class:"btn", type:"button", onclick:cuenta}, usuario ? "Seguir a mi primera lección" : "Guardar mi ruta"))
+    el("p", {class:"invitacion"}, "Tu primera lección: Tasas, bancos y tu bolívar."),
+    el("div", {class:"acciones"}, el("button", {class:"btn", type:"button", onclick:irALeccion}, "Empezar mi primera lección"))
   );
 }
 
+// La cuenta ya no se pide antes de la lección: quien ya tiene sesión guarda su diagnóstico aquí;
+// quien no la tiene, empieza la lección y se le ofrece guardar al terminarla.
+function irALeccion(){
+  if (usuario) { registrarPaso("con_sesion"); guardarDiagnostico(); }
+  final();
+}
+
+// Cuenta al terminar la lección 1: guarda el diagnóstico y el Criterio de esta sesión.
 function cuenta(){
-  if (usuario) { registrarPaso("con_sesion"); guardarDiagnostico(); return final(); }
   registrarPaso("cuenta");
   const correo = el("input", {type:"email", autocomplete:"email", inputmode:"email", placeholder:"tu@correo.com"});
   const clave = el("input", {type:"password", autocomplete:"new-password", placeholder:"Mínimo 6 caracteres"});
@@ -717,20 +725,21 @@ function cuenta(){
     usuario = data.session.user;
     registrarPaso("cuenta_creada");
     await guardarDiagnostico();
-    final();
+    if (!L.guardada) { L.guardada = true; await guardarLeccion(); }
+    cierre();
   };
   crear.addEventListener("click", () => enviar("crear"));
   entrar.addEventListener("click", () => enviar("entrar"));
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
-    el("h1", {class:"titulo"}, "Crea tu cuenta para guardar tu resultado"),
-    el("p", {class:"sublema"}, "Así tu ruta te espera la próxima vez y puedes invitar a otras personas con tu código."),
+    el("h1", {class:"titulo"}, "Crea tu cuenta para guardar tu Criterio"),
+    el("p", {class:"sublema"}, "Así tu ruta y tu Criterio te esperan la próxima vez, y puedes invitar a otras personas con tu código."),
     el("label", {class:"campo"}, "Correo", correo),
     el("label", {class:"campo"}, "Contraseña", clave),
     error,
     el("p", {class:"privacidad"}, "Guardamos tus respuestas para mejorar PRIOR. Nunca te pedimos montos ni dónde guardas tu dinero."),
     el("div", {class:"acciones"}, crear, entrar,
-      el("button", {class:"btn texto", type:"button", onclick:() => { registrarPaso("sin_cuenta"); final(); }}, "Seguir sin guardar"))
+      el("button", {class:"btn texto", type:"button", onclick:() => { L.rechazoCuenta = true; registrarPaso("sin_cuenta"); cierre(); }}, "Ahora no"))
   );
 }
 
@@ -1104,7 +1113,7 @@ function cierre(){
   const t = L.datos.m5_texto || "";
   if (esConcreta(t)) ganar("m5", 3, "una decisión concreta para tu vida");
   else ganar("m5", 1, "escribiste tu decisión");
-  guardarLeccion();
+  if (usuario && !L.guardada) { L.guardada = true; guardarLeccion(); }
   const resp = el("p", {class:"aviso-demo", role:"status"});
   const pedir = (si) => { L.datos.pide_leccion_2 = si; resp.textContent = si ? "Listo: te avisamos cuando esté la lección 2." : "Está bien. Aquí estará cuando quieras volver."; };
   pantalla(
@@ -1114,6 +1123,10 @@ function cierre(){
     L.conceptos.length ? el("p", {}, el("b", {}, "Hoy aprendiste: "), L.conceptos.map(c => c[0]).join(", ")) : null,
     t ? el("h2", {class:"subtitulo"}, "Tu decisión de esta semana") : null,
     t ? el("div", {class:"tarjeta"}, el("p", {}, `“${t}”`)) : null,
+    usuario || L.rechazoCuenta ? null : el("div", {class:"tarjeta"},
+      el("p", {}, el("b", {}, "Guarda tu Criterio")),
+      el("p", {}, `Crea tu cuenta para que tus ${L.criterio} de Criterio y tu ruta te esperen la próxima vez.`),
+      el("div", {style:"margin-top:12px"}, el("button", {class:"btn", type:"button", onclick:cuenta}, "Guardar mi Criterio"))),
     usuario ? el("h2", {class:"subtitulo"}, "Invita a alguien") : null,
     usuario ? (() => {
       const enlace = `${location.origin}${location.pathname}?ref=${usuario.id.slice(0,8)}`;
