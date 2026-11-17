@@ -418,7 +418,7 @@ async function guardarDiagnostico(){
 async function guardarLeccion(){
   if (!sb || !usuario) return;
   const { error } = await sb.from("leccion_resultados").insert({
-    user_id: usuario.id, correo: usuario.email, leccion: "E1", criterio: L.criterio, desglose: L.desglose,
+    user_id: usuario.id, correo: usuario.email, leccion: L.id || "E1", criterio: L.criterio, desglose: L.desglose,
     datos: L.datos, duracion_seg: Math.round((Date.now() - (L.inicio || Date.now())) / 1000) });
   if (error) console.error("No se guardó la lección:", error.message);
 }
@@ -786,7 +786,7 @@ function ganar(clave, puntos, razon){
 // Pantalla de lección: guía con burbujas, luego la interacción; "Seguir" se activa con listo().
 function pl({momento, burbujas, construir, boton="Seguir", saltable=false, concepto=null, auto=false}){
   const total = PANTALLAS.length;
-  registrarPaso(`leccion_${L.paso+1}`);
+  registrarPaso(L.id === "F1" ? `f1_${L.paso+1}` : `leccion_${L.paso+1}`);
   const guia = el("div", {class:"guia"});
   const zona = el("div", {});
   const seguir = el("button", {class:"btn", type:"button", disabled:true}, boton);
@@ -868,7 +868,7 @@ function barrasPoder(valores, tuya){
   return cont;
 }
 
-const PANTALLAS = [
+let PANTALLAS = [
   // ---- Momento 1 · Decide
   () => pl({auto:true, momento:1, burbujas:[
       ...(grupoMoneda(estado.perfil.moneda) === "usd" ? [`Tú cobras en ${MONEDA_TEXTO[estado.perfil.moneda]}, pero igual pagas en bolívares. Esta lección parte de alguien que cobra en bolívares, porque explica cómo funciona el bolívar que usas cada día.`] : []),
@@ -1099,14 +1099,14 @@ const PANTALLAS = [
 function esConcreta(t){ return t.length >= 25 && /(hoy|mañana|lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo|semana|día|dia|quincena|cobro|cuando)/i.test(t); }
 
 function cierre(){
-  registrarPaso("leccion_fin");
+  registrarPaso(L.id === "F1" ? "f1_fin" : "leccion_fin");
   L.zona = null;
   const t = L.datos.m5_texto || "";
   if (esConcreta(t)) ganar("m5", 3, "una decisión concreta para tu vida");
   else ganar("m5", 1, "escribiste tu decisión");
   guardarLeccion();
   const resp = el("p", {class:"aviso-demo", role:"status"});
-  const pedir = (si) => { L.datos.pide_leccion_2 = si; resp.textContent = si ? "Listo: te avisamos cuando esté la lección 2." : "Está bien. Aquí estará cuando quieras volver."; };
+  const pedir = (si) => { L.datos[L.id === "F1" ? "pide_leccion_3" : "pide_leccion_2"] = si; resp.textContent = si ? `Listo: te avisamos cuando esté la lección ${L.id === "F1" ? 3 : 2}.` : "Está bien. Aquí estará cuando quieras volver."; };
   pantalla(
     el("div", {class:"cabecera"}, el("span", {class:"marca"}, "PRIOR"), el("span", {class:"criterio-total"}, `${L.criterio} Criterio`)),
     el("h1", {class:"titulo"}, `Ganaste ${L.criterio} de 15 de Criterio`),
@@ -1122,7 +1122,7 @@ function cierre(){
       return el("div", {class:"tarjeta"}, el("p", {}, "Tu código"), el("div", {class:"codigo"}, usuario.id.slice(0,8).toUpperCase()), el("div", {style:"margin-top:12px"}, copiar));
     })() : null,
     avisoInstalar(),
-    el("p", {class:"pregunta-chica"}, "¿Quieres la lección 2 cuando esté lista?"),
+    el("p", {class:"pregunta-chica"}, L.id === "F1" ? "¿Quieres la próxima lección cuando esté lista?" : "¿Quieres la lección 2 cuando esté lista?"),
     el("div", {class:"acciones"},
       el("button", {class:"btn", type:"button", onclick:() => pedir(true)}, "Sí, avísame"),
       el("button", {class:"btn secundario", type:"button", onclick:() => pedir(false)}, "Ahora no"),
@@ -1176,7 +1176,184 @@ function final(){
   ], () => empezar.disabled = false);
 }
 
-bienvenida();
+/* ================= Lección F1: 100 dólares y un consejo (borrador 17 nov 2026) =================
+   Oculta: solo se abre con ?leccion=2. Sin cifras que caduquen, sin activos concretos, sin rendimientos. */
+const F1_OPC = ["Hago lo mismo que mi amigo, para no quedarme atrás.",
+  "Le pregunto en qué los puso y decido después.",
+  "Los guardo en dólares hasta tener claro qué hacer.",
+  "Primero pienso para qué quiero ese dinero y cuándo lo voy a necesitar."];
+const F1_ASESORES = [
+  { nombre:"Marcos", consejo:"“Yo aparto mis 100 y no los toco por años. Los dejo trabajando y ni los miro. Me ha ido bien.”", mejor:"Luis",
+    bien:"Sí. Luis cobra fijo, no tiene urgencias y no va a necesitar ese dinero en cinco años. El consejo de Marcos encaja con su situación.",
+    mal:"Casi. Ese consejo le sirve más a Luis: no necesita el dinero en años y cobra fijo. Quien lo va a necesitar pronto o cobra irregular puede quedarse sin él justo cuando le hace falta." },
+  { nombre:"Carla", consejo:"“Yo tengo el dinero a la mano, donde pueda sacarlo el mismo día. Cuando lo he necesitado, ahí estaba.”", mejor:"Sofía",
+    bien:"Sí. Sofía se muda en cinco meses y necesita ese dinero. Para ella, poder sacarlo a tiempo pesa más que cualquier otra cosa.",
+    mal:"Casi. Ese consejo le sirve más a Sofía: se muda en cinco meses y necesita el dinero. Quien no lo va a tocar en años puede ser más paciente." },
+  { nombre:"Ramón", consejo:"“Cada vez que cobro aparto una parte. Armé un colchón para tres meses sin trabajo. Con eso duermo tranquilo.”", mejor:"Pedro",
+    bien:"Sí. Pedro cobra por trabajos: un mes le va muy bien y al siguiente casi nada. Un colchón le da calma y margen para decidir.",
+    mal:"Casi. Ese consejo le sirve más a Pedro: su ingreso sube y baja. Quien cobra fijo y sin urgencias tiene otra prioridad." }
+];
+const F1_PERSONAS = [
+  ["Luis", "Cobra fijo cada mes, no tiene cargas y no va a necesitar ese dinero en 5 años."],
+  ["Sofía", "Se muda en 5 meses y necesita ese dinero para el depósito y los gastos de la mudanza."],
+  ["Pedro", "Cobra por trabajos: un mes le va muy bien y al siguiente casi nada."]];
+
+const PANTALLAS_F1 = [
+  // ---- Momento 1 · Decide
+  () => pl({auto:true, momento:1, burbujas:[
+      "Imagina que desde este mes te sobran 100 USD cada mes.",
+      "Un amigo cercano te cuenta que él ya pone su plata en algo y que le va muy bien. No te dice más.",
+      {texto:"¿Qué haces con tus 100 USD?", clase:"pregunta"}],
+    construir:(z, listo) => elegir(z, F1_OPC, k => { L.datos.m1_opcion = LETRAS[k]; ganar("m1", 2, "decidiste sin miedo a equivocarte"); listo(); }) }),
+
+  // ---- Momento 2 · Lo que pasó y la creencia
+  () => pl({momento:2, auto:true, burbujas:[
+      "Antes de seguir, predice.",
+      "Diez personas copian lo que hizo tu amigo. Solo una de las diez tiene su misma situación.",
+      {texto:"¿Cuántas de las diez crees que terminan igual de bien que él?", clase:"pregunta"}],
+    construir:(z, listo) => elegir(z, ["Casi todas", "La mitad", "Pocas", "Solo la que tiene su situación"], k => {
+      L.datos.m2_prediccion = ["casi_todas","mitad","pocas","misma_situacion"][k];
+      ganar("m2", 1, "hiciste tu predicción");
+      nota(z, k >= 2 ? "<b>Bien leído.</b> Veamos por qué." : "<b>Veamos por qué pasa esto.</b>");
+      listo(); }) }),
+
+  () => pl({momento:2, concepto:["Sesgo del superviviente", "Oyes a quienes les fue bien. A quienes perdieron casi nunca los oyes, y eso hace que todo parezca más seguro de lo que es."], burbujas:[
+      "A cada quien le va distinto porque cada quien tiene un objetivo, un plazo y un margen para perder diferentes. Lo que le funcionó a tu amigo le funcionó a él, con lo suyo.",
+      "Copiar a alguien que ya lo hizo tiene sentido: cuando casi no hay información confiable, es la forma más rápida de decidir. Y en Venezuela muchas veces fue lo que tocaba.",
+      "El problema es que solo te cuentan lo que salió bien."],
+    construir:(z, listo) => { z.append(el("div", {class:"tarjeta"}, el("p", {}, "Ninguna decisión de seguir a alguien es tonta. La pregunta es si su situación se parece a la tuya."))); listo(); } }),
+
+  // ---- Momento 3 · La teoría
+  () => pl({momento:3, concepto:["Tu punto de partida", "Para qué es el dinero, cuándo lo vas a necesitar y cuánto puedes perder sin que se te caiga la vida."], burbujas:[
+      "Tres cosas cambian de una persona a otra, y deciden si un consejo te sirve:",
+      "Para qué es el dinero. Cuándo lo vas a necesitar. Y cuánto puedes perder sin que se te caiga la vida."],
+    construir:(z, listo) => { listo(); } }),
+
+  () => pl({momento:3, burbujas:["Probemos con el plazo.", "Mueve la barra: ¿cuándo vas a necesitar este dinero?"],
+    construir:(z, listo) => {
+      const texto = el("div", {class:"tarjeta"}, el("p", {}));
+      const poner = m => {
+        texto.firstChild.textContent = m <= 3 ? "Lo necesitas muy pronto. Lo que más importa es poder sacarlo cuando lo necesites, sin perder."
+          : m <= 12 ? "Lo necesitas en meses. Prefieres tenerlo a la mano y que no sea una sorpresa."
+          : m <= 36 ? "Tienes algo de tiempo. Puedes pensar en qué tanto altibajo aguantas."
+          : "Tienes mucho tiempo. Puedes aguantar altibajos, porque no lo necesitas ya.";
+      };
+      let movido = false;
+      z.append(slider("¿Cuándo lo vas a necesitar?", 1, 60, 1, 6, v => v < 12 ? `${v} ${v === 1 ? "mes" : "meses"}` : `${(v/12).toLocaleString("es-VE", {maximumFractionDigits:1})} años`, v => {
+        poner(v); if (!movido) { movido = true; ganar("m3a", 1, "probaste cómo cambia el plazo"); listo(); } }));
+      poner(6); z.append(texto, el("p", {class:"leyenda"}, "El plazo cambia lo que te conviene, aunque el monto sea el mismo."));
+    } }),
+
+  () => pl({momento:3, concepto:["Riesgo", "La posibilidad de que el resultado sea distinto a lo que esperabas, para bien o para mal. No es solo perder todo: también es no poder sacar el dinero a tiempo."], burbujas:[
+      "Cuando se habla de riesgo, mucha gente piensa solo en perder todo.",
+      "Pero también es riesgo no poder sacar el dinero cuando lo necesitas, o que te rinda menos de lo que esperabas."],
+    construir:(z, listo) => {
+      const btn = el("button", {class:"vermas", type:"button"}, "Ver un ejemplo");
+      const extra = el("div", {class:"oculto"}, el("div", {class:"burbuja"}, "Si necesitas el dinero en dos meses y lo dejaste donde no puedes sacarlo, el problema no es que se pierda: es que no está cuando lo necesitas."));
+      btn.addEventListener("click", () => { extra.classList.remove("oculto"); btn.remove(); ganar("m3c", 1, "exploraste qué es el riesgo"); });
+      z.append(btn, extra); listo(); } }),
+
+  () => pl({momento:3, burbujas:["Ahora, tres personas que dan consejos y tres que tienen que decidir.", {texto:"¿A quién le sirve más el consejo de cada uno?", clase:"pregunta"}],
+    construir:(z, listo) => {
+      let i = 0, respondidas = 0;
+      const personas = el("div", {class:"tarjeta"}, ...F1_PERSONAS.map(([n, d]) => el("p", {}, el("b", {}, n + ": "), d)));
+      z.append(personas);
+      const caja = el("div", {});
+      z.append(caja);
+      const mostrar = () => {
+        const a = F1_ASESORES[i];
+        const tarjeta = el("div", {class:"tarjeta"}, el("p", {}, el("b", {}, a.nombre)), el("p", {}, a.consejo));
+        const opciones = el("div", {class:"opciones"});
+        F1_PERSONAS.forEach(([n]) => {
+          const b = el("button", {class:"opcion", type:"button"}, el("span", {}, n));
+          b.addEventListener("click", () => {
+            opciones.querySelectorAll(".opcion").forEach(o => o.disabled = true);
+            nota(tarjeta, n === a.mejor ? `<b>${a.bien}</b>` : `<b>${a.mal}</b>`);
+            L.datos["m3_" + a.nombre.toLowerCase()] = n;
+            respondidas++;
+            if (i < F1_ASESORES.length - 1) {
+              const sig = el("button", {class:"vermas", type:"button"}, "Siguiente consejo");
+              sig.addEventListener("click", () => { sig.remove(); i++; mostrar(); });
+              tarjeta.append(sig);
+            } else { ganar("m3b", 2, "razonaste a quién le sirve cada consejo"); listo(); }
+          });
+          opciones.append(b);
+        });
+        tarjeta.append(opciones); caja.append(tarjeta);
+        tarjeta.scrollIntoView({behavior: reducido?"auto":"smooth", block:"nearest"});
+      };
+      mostrar(); } }),
+
+  () => pl({momento:3, auto:true, burbujas:["Un buen consejo no sale de que le haya ido bien a alguien.", "Sale de que su situación se parezca a la tuya."],
+    construir:(z, listo) => { z.append(el("div", {class:"tarjeta"}, el("p", {}, "Los tres consejos eran buenos. Cada uno le sirve a quien tiene una situación parecida a la suya."))); listo(); } }),
+
+  // ---- Momento 4 · Vuelve a decidir
+  () => pl({momento:4, auto:true, burbujas:[
+      "Mismo amigo, mismo consejo, mismos 100 USD al mes.",
+      "Pero ahora sabes algo más: en 6 meses vas a necesitar ese dinero para algo que no puedes mover. Puede ser una cirugía, un viaje de trabajo o un pago importante.",
+      {texto:"¿Qué haces con tus 100 USD?", clase:"pregunta"}],
+    construir:(z, listo) => elegir(z, F1_OPC, k => {
+      L.datos.m4_opcion = LETRAS[k];
+      const t = [
+        "Si tu amigo no necesita el dinero pronto y tú sí, puedes no tenerlo cuando lo necesites.",
+        "Preguntar es un buen primer paso. Falta lo más importante: ponerlo frente a tu plazo de 6 meses.",
+        "Sirve para tenerlo a la mano. Recuerda lo que viste en la lección 1: el dólar también pierde poder de compra con el tiempo.",
+        "Es lo que más cambia el resultado: partes de tu plazo, no de lo que hizo otra persona."][k];
+      nota(z, `<b>Lo que pasa:</b> ${t}`);
+      listo(); }) }),
+
+  () => pl({auto:true, momento:4, burbujas:[{texto:"¿En qué te fijaste para decidir?", clase:"pregunta"}],
+    construir:(z, listo) => elegir(z, [
+        "En lo que hizo mi amigo",
+        "En cuándo voy a necesitar el dinero",
+        "En cuánto puedo perder sin que se me complique",
+        "En no quedarme atrás"], k => {
+      L.datos.m4_razon = k;
+      if (k === 1 || k === 2) { ganar("m4", 3, "decidiste con tu situación, no con la de otro"); nota(z, "<b>Así se decide con criterio:</b> miraste tu plazo y tu margen."); }
+      else { ganar("m4", 1, "volviste a decidir"); nota(z, "<b>Es una razón humana,</b> pero la próxima vez mira primero tu plazo y cuánto puedes perder."); }
+      listo(); }) }),
+
+  // ---- Momento 5 · Llévalo a tu vida
+  () => pl({momento:5, boton:"Terminar la lección", burbujas:[
+      "Antes de seguir cualquier consejo, hazte tres preguntas:",
+      "¿Para qué quiere ese dinero la persona que me aconseja? ¿Cuándo lo necesita? ¿Qué le pasa si le sale mal, y qué me pasaría a mí?",
+      "Y una más: ¿quién gana si yo lo hago?"],
+    construir:(z, listo) => {
+      const acciones = ["Anotar para qué y cuándo voy a necesitar mi próximo dinero de sobra",
+        "Preguntarle a alguien que me aconsejó qué le funcionó y por qué",
+        "Hacerme las tres preguntas con un consejo que ya recibí"];
+      const paso3 = el("div", {}); 
+      z.append(el("p", {class:"pregunta-chica"}, "¿Qué vas a hacer esta semana?"));
+      elegir(z, acciones, k => {
+        L.datos.m5_accion = acciones[k]; ganar("m5a", 2, "elegiste cómo llevarlo a tu vida");
+        const area = el("textarea", {placeholder:"Escríbelo en una frase: qué vas a hacer y cuándo.", "aria-label":"Tu decisión de esta semana"});
+        area.addEventListener("input", () => { L.datos.m5_texto = area.value.trim(); if (L.datos.m5_texto.length >= 8) listo(); });
+        paso3.append(area); z.append(paso3); area.focus({preventScroll:true}); });
+    } })
+];
+
+function final2(){
+  registrarPaso("f1_intro");
+  const guia = el("div", {class:"guia"});
+  const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
+    L.id = "F1"; L.paso = 0; L.criterio = 0; L.desglose = []; L.datos = {}; L.otorgado = new Set(); L.conceptos = []; L.inicio = Date.now(); PANTALLAS[0](); }}, "Empezar la lección");
+  pantalla(
+    el("div", {class:"marca"}, "PRIOR"),
+    el("h1", {class:"titulo"}, "Lección 2: 100 dólares y un consejo"),
+    el("p", {class:"sublema"}, "Finanzas · lección 2 · unos 6 minutos"),
+    guia,
+    el("div", {class:"acciones"}, empezar)
+  );
+  escribir(guia, [
+    {texto:"Cuando alguien cercano te dice “a mí me funcionó”, es natural querer hacer lo mismo."},
+    {texto:"Hoy vas a practicar cómo saber si ese consejo te sirve a ti. Equivocarte no te quita nada."}
+  ], () => empezar.disabled = false);
+}
+
+// Enlace oculto: solo con ?leccion=2 se abre la lección 2. Sin ese parámetro todo sigue igual.
+if (new URLSearchParams(location.search).get("leccion") === "2") { PANTALLAS = PANTALLAS_F1; L.id = "F1"; final2(); }
+else bienvenida();
+
 </script>
 </body>
 </html>
