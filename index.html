@@ -63,7 +63,7 @@ button{font:inherit; color:inherit; cursor:pointer}
   padding:16px 18px; max-width:92%; min-height:1.6em;
 }
 .burbuja.pregunta{font-weight:600}
-.burbuja.entra{animation:entra .3s ease both}
+.burbuja.entra{animation:entra .25s ease both}
 @keyframes entra{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
 .saltar{font-size:13px; color:var(--texto2); background:none; border:0; padding:4px 0; align-self:flex-start}
 
@@ -465,7 +465,7 @@ function escribir(contenedor, textos, alTerminar){
     // para que alcance a leerse, sin la sensación de apuro de ver el texto escribiéndose.
     const b = burbujas[k++], txt = b.dataset.texto;
     b.textContent = txt; b.classList.add("entra"); contenedor.append(b);
-    const pausa = Math.min(2400, 700 + txt.length * 22);
+    const pausa = Math.min(1700, 400 + txt.length * 13);
     timers.push(setTimeout(siguiente, pausa));
   };
   siguiente();
