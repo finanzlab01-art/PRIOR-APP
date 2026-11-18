@@ -329,49 +329,49 @@ const ESCENARIOS = [
 ];
 const LETRAS = ["A","B","C","D","E"];
 const MATERIAS = [
-  { nombre:"Economía", frase:"Cómo la inflación, las tasas y el tipo de cambio mueven el dinero que ganas." },
-  { nombre:"Finanzas", frase:"Qué hacer con lo que te sobra: riesgo, rendimiento y cómo repartir." },
-  { nombre:"Conducta y sociedad", frase:"Las creencias de la crisis que todavía deciden por ti." }
+  { nombre:"Economía", frase:"Cómo la inflación, las tasas de interés y el tipo de cambio afectan tu poder adquisitivo." },
+  { nombre:"Finanzas", frase:"Qué hacer con tu excedente: riesgo, rendimiento y cómo diversificar." },
+  { nombre:"Conducta y sociedad", frase:"Las creencias heredadas de la crisis que todavía influyen en tus decisiones." }
 ];
 
 // Resultado: por qué empieza la ruta en cada materia. {N} = decisiones donde pesó; {T} = decisiones que contaron.
 const POR_QUE = [
-  { con:"En {N} de tus {T} decisiones pesó más cómo se mueven la tasa, los precios y el bolívar. Por ahí empezamos: entender eso hace más fáciles todas las demás decisiones.",
-    sin:"En tus decisiones pesó más cómo se mueven la tasa, los precios y el bolívar. Por ahí empezamos: entender eso hace más fáciles todas las demás decisiones." },
-  { con:"En {N} de tus {T} decisiones, la duda estuvo en qué hacer con el dinero que sobra: dónde ponerlo, cuánto arriesgar y cómo repartirlo. Por ahí empezamos.",
-    sin:"En tus decisiones, la duda estuvo en qué hacer con el dinero que sobra: dónde ponerlo, cuánto arriesgar y cómo repartirlo. Por ahí empezamos." },
-  { con:"En {N} de tus {T} decisiones pesaron más las costumbres que dejó la crisis que los números del momento. Por ahí empezamos: no para borrarlas, sino para ver cuáles todavía te sirven.",
-    sin:"En tus decisiones pesaron más las costumbres que dejó la crisis que los números del momento. Por ahí empezamos: no para borrarlas, sino para ver cuáles todavía te sirven." }
+  { con:"En {N} de tus {T} decisiones pesó más la dinámica de la tasa de cambio, los precios y el bolívar. Por ahí empezamos: entender esas variables hace más sólidas todas las demás decisiones.",
+    sin:"En tus decisiones pesó más la dinámica de la tasa de cambio, los precios y el bolívar. Por ahí empezamos: entender esas variables hace más sólidas todas las demás decisiones." },
+  { con:"En {N} de tus {T} decisiones, la duda estuvo en qué hacer con el excedente: en qué instrumento colocarlo, cuánto riesgo asumir y cómo diversificarlo. Por ahí empezamos.",
+    sin:"En tus decisiones, la duda estuvo en qué hacer con el excedente: en qué instrumento colocarlo, cuánto riesgo asumir y cómo diversificarlo. Por ahí empezamos." },
+  { con:"En {N} de tus {T} decisiones pesaron más los hábitos que dejó la crisis que los datos del momento. Por ahí empezamos: no para descartarlos, sino para evaluar cuáles todavía te sirven.",
+    sin:"En tus decisiones pesaron más los hábitos que dejó la crisis que los datos del momento. Por ahí empezamos: no para descartarlos, sino para evaluar cuáles todavía te sirven." }
 ];
 const ELECCION_C3 = "Respondiste el cálculo de los porcentajes con mucha seguridad.";
 const CREENCIAS = {
   "El efectivo en dólares es el refugio": {
-    porque:"Durante años el bolívar perdía valor tan rápido que tener dólares en la mano era la forma más segura de no perderlo todo. Y los bancos no siempre dejaban sacar tu dinero.",
-    revisar:"Cuánto pierde también el dólar guardado, y cuándo conviene tenerlo a la mano y cuándo no." },
+    porque:"Durante años el bolívar perdía valor tan rápido que tener dólares en efectivo era la forma más segura de preservar tu patrimonio. Y los bancos no siempre permitían retirar tu dinero.",
+    revisar:"Cuánto poder adquisitivo pierde también el dólar guardado, y cuándo conviene mantener liquidez (dinero disponible de inmediato) y cuándo no." },
   "Gastar todo apenas cobras, por si acaso": {
-    porque:"Con precios que subían cada semana, gastar el mismo día era una forma de protegerte.",
-    revisar:"Cuándo gastar rápido te protege de verdad y cuándo te deja sin colchón para imprevistos." },
+    porque:"Con precios que subían cada semana, gastar el mismo día era una forma de proteger tu poder adquisitivo.",
+    revisar:"Cuándo gastar rápido te protege de verdad y cuándo te deja sin fondo de emergencia (reserva para imprevistos)." },
   "Lo de hoy vale más, aunque cueste mañana": {
-    porque:"Cuando no sabes cuánto costarán las cosas mañana, asegurar hoy lo que puedes tener es una reacción lógica.",
-    revisar:"Cómo pesar una compra de hoy contra lo que vas a deber después, y cuándo dos compromisos a la vez se vuelven un problema." },
+    porque:"Cuando no sabes cuánto costarán las cosas mañana, asegurar hoy lo que puedes adquirir es una reacción lógica.",
+    revisar:"Cómo comparar el beneficio de una compra hoy con la deuda que genera, y cuándo dos compromisos simultáneos se vuelven un problema de flujo de caja (lo que entra y sale de tu bolsillo)." },
   "Si a otros les funciona, a mí también": {
-    porque:"Cuando hay poca información confiable, seguir a alguien cercano que ya lo hizo es la forma más rápida de decidir.",
-    revisar:"Qué preguntar antes de seguir un consejo, y por qué lo que le sirve a otra persona depende de su situación, no de la tuya." },
+    porque:"Cuando hay poca información confiable, seguir a alguien cercano que ya lo hizo es el atajo más rápido para decidir.",
+    revisar:"Qué preguntar antes de seguir un consejo, y por qué lo que le sirve a otra persona depende de su situación financiera, no de la tuya." },
   "Invertir es peligroso, o es copiar al que le va bien": {
-    porque:"Mucha gente vio perder ahorros en crisis, estafas o empresas que cayeron. Desconfiar tiene razones.",
-    revisar:"Qué es el riesgo y cómo se reparte, para que invertir no sea ni un salto al vacío ni una copia." },
+    porque:"Mucha gente vio perder sus ahorros en crisis, estafas o quiebras de empresas. Desconfiar tiene razones.",
+    revisar:"Qué es el riesgo y cómo se diversifica (repartir el dinero en opciones distintas), para que invertir no sea ni un salto al vacío ni una copia." },
   "El efectivo como refugio, o todo a una sola apuesta": {
-    porque:"Cuando todo parece incierto, uno tiende a los extremos: guardarlo todo o ponerlo todo en lo que parece que va a subir.",
-    revisar:"Cómo repartir un dinero extra entre emergencias y opciones distintas, para no depender de una sola." },
+    porque:"Cuando todo parece incierto, tendemos a los extremos: conservarlo todo en efectivo o concentrarlo todo en lo que parece que va a subir.",
+    revisar:"Cómo distribuir un ingreso extra entre fondo de emergencia e instrumentos distintos, para no depender de uno solo." },
   "Cuando sube el dólar, hay que correr": {
-    porque:"En años de devaluación fuerte, cada día de espera costaba. Cambiar rápido era una defensa real.",
-    revisar:"Cómo leer una subida del dólar junto con lo que pasa con los precios, antes de correr a cambiar." },
+    porque:"En años de devaluación fuerte, cada día de espera costaba. Convertir rápido a dólares era una defensa real.",
+    revisar:"Cómo interpretar una subida del dólar junto con la inflación, antes de apresurarte a cambiar." },
   "Esperar es la mejor defensa": {
-    porque:"Si las reglas cambian cada poco tiempo, esperar a que todo se calme parece lo más prudente.",
-    revisar:"Cuánto cuesta esperar, y cómo dar pasos pequeños aunque el panorama no esté claro." },
+    porque:"Si las reglas cambian cada poco tiempo, esperar a que el entorno se estabilice parece lo más prudente.",
+    revisar:"Cuánto cuesta esperar (el costo de oportunidad), y cómo dar pasos pequeños aunque el panorama no esté claro." },
   "Sé manejar mi dinero": {
-    porque:"Sobrevivir años de crisis enseña muchísimo, y es natural confiar en lo que ya aprendiste.",
-    revisar:"Algunos cálculos que engañan a casi todos, como los porcentajes que suben y bajan, y cómo comprobar antes de confiar." }
+    porque:"Atravesar años de crisis enseña muchísimo, y es natural confiar en lo que ya aprendiste.",
+    revisar:"Algunos cálculos que engañan a casi todos, como las variaciones porcentuales sucesivas (subir y bajar un mismo porcentaje), y cómo verificar antes de confiar." }
 };
 
 /* ---------- Conexión con Supabase ---------- */
@@ -689,15 +689,15 @@ function resultado(){
 
   const linea = (etiqueta, texto) => el("p", {}, el("b", {}, etiqueta), texto);
   const creencias = estado.detalleCreencias.length ? el("section", {class:"creencias"},
-    el("h2", {}, "Creencias que vamos a revisar contigo"),
-    el("p", {class:"sublema"}, "Ninguna es un error. Son formas de decidir que aprendimos en años difíciles."),
+    el("h2", {}, "Creencias heredadas que vamos a revisar contigo"),
+    el("p", {class:"sublema"}, "Ninguna es un error. Son atajos para decidir (heurísticas) que aprendimos en años difíciles."),
     ...estado.detalleCreencias.slice(0,3).map(({dogma, eleccion}) => el("div", {class:"tarjeta"},
       el("h3", {}, dogma),
       linea("Lo que elegiste:", eleccion === ELECCION_C3 ? eleccion : `«${eleccion}»`),
       linea("Por qué tiene sentido:", CREENCIAS[dogma].porque),
       linea("Lo que vamos a revisar:", CREENCIAS[dogma].revisar))))
     : el("section", {class:"creencias"}, el("div", {class:"tarjeta"},
-      el("p", {}, "No apareció ninguna creencia fuerte en tus decisiones. Es una buena base: tu ruta se va a enfocar más en afinar cómo lees los números que en revisar costumbres.")));
+      el("p", {}, "No apareció ninguna creencia fuerte en tus decisiones. Es una buena base: tu ruta se va a enfocar más en afinar el análisis de las cifras que en revisar hábitos.")));
 
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
@@ -774,8 +774,8 @@ const poder = (op, i, d) => {
   if (op === 2) return Math.pow(1+d, 3) * DATOS.costoCambio / c;
   return 1;
 };
-const OPC_LECCION = ["Los pongo a plazo. 46% es más de lo que paga casi cualquier cosa.",
-  "Los dejo en la cuenta. Ahora paga 10% y los tengo a la mano.",
+const OPC_LECCION = ["Los coloco a plazo. 46% es más de lo que rinde casi cualquier otra opción.",
+  "Los dejo en la cuenta. Paga 10% y tengo liquidez: puedo usarlos cuando quiera.",
   "Los cambio hoy a dólares y los guardo hasta que los necesite.",
   "Compro hoy cosas que sé que voy a usar en esos tres meses."];
 const OPC_CORTAS = ["Plazo al 46%", "Cuenta al 10%", "Dólares", "Comprar hoy lo que usaré"];
@@ -926,7 +926,7 @@ const PANTALLAS = [
       const textos = [
         `A plazo recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.plazo*3/12))}, pero compras ${pct(1-poder(0, DATOS.inflMes, DATOS.dolarMes))} menos que hoy.`,
         `En la cuenta recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.cuenta*3/12))} y compras ${pct(1-poder(1, DATOS.inflMes, DATOS.dolarMes))} menos.`,
-        `Conservas 50 dólares, pero la tasa subió cerca de 3,5% al mes y los precios 6,2%. Tus dólares compran unos ${pct(1-poder(2, DATOS.inflMes, DATOS.dolarMes), 0)} menos aquí. Sí, los dólares también pierden.`,
+        `Conservas 50 dólares, pero la tasa subió cerca de 3,5% al mes y los precios 6,2%. Tus dólares compran unos ${pct(1-poder(2, DATOS.inflMes, DATOS.dolarMes), 0)} menos aquí. Sí: los dólares también pierden poder adquisitivo.`,
         "Congelas el precio de esas cosas. Funciona solo con lo que de verdad vas a usar y puedes guardar."];
       nota(z, `<b>Tu opción:</b> ${textos[op]}`);
       z.append(el("p", {class:"fuente"}, DATOS.fuente));
@@ -934,8 +934,8 @@ const PANTALLAS = [
 
   () => {
     const op = L.datos.m1_opcion;
-    const A = "El 46% suena alto, pero un número más grande no significa más poder de compra. En economía se llama ilusión monetaria: mirar la cifra y no lo que esa cifra compra.";
-    const C = "Aquí la creencia es “el dólar siempre protege”. Lo hizo durante años de devaluación fuerte. Pero cuando la tasa se mueve más lento que los precios, el dólar también pierde poder de compra en Venezuela.";
+    const A = "El 46% suena alto, pero un número más grande no significa más poder adquisitivo (lo que tu dinero puede comprar). En economía se llama ilusión monetaria: mirar la cifra y no lo que esa cifra compra.";
+    const C = "Aquí la creencia es “el dólar siempre protege”. Lo hizo durante años de devaluación fuerte. Pero cuando la tasa se mueve más lento que los precios, el dólar también pierde poder adquisitivo en Venezuela.";
     const primera = op === "C" ? C : A;
     const segunda = op === "C" ? A : C;
     pl({momento:2, burbujas:[
@@ -947,7 +947,7 @@ const PANTALLAS = [
         btn.addEventListener("click", () => { extra.classList.remove("oculto"); btn.remove(); ganar("m2b", 1, "exploraste las dos creencias"); });
         extra.append(el("div", {class:"burbuja"}, op === "A" || op === "C" ? segunda : C));
         z.append(btn, extra);
-        z.append(el("div", {class:"tarjeta"}, el("p", {}, "Ninguna de las dos es tonta: las dos tuvieron sentido en otro momento. La pregunta es qué dicen los números hoy.")));
+        z.append(el("div", {class:"tarjeta"}, el("p", {}, "Las dos tuvieron sentido en otro momento. La pregunta es qué dicen los datos hoy.")));
         listo(); },
       concepto:["Ilusión monetaria", "Mirar la cifra (46%, 100 dólares) y no lo que esa cifra compra."] });
   },
@@ -1013,12 +1013,12 @@ const PANTALLAS = [
     concepto:["Crédito indexado (UVC)", "Una deuda que se ajusta con el tipo de cambio: si el bolívar cae, lo que debes sube."] }),
 
   // ---- Momento 3b · El impacto
-  () => pl({auto:true, momento:3, burbujas:["Esto le causa cuatro efectos a tu dinero que vives sin verlos.", {texto:"¿Cuál vives más?", clase:"pregunta"}],
+  () => pl({auto:true, momento:3, burbujas:["Esto produce cuatro efectos sobre tu dinero que quizás vives sin notarlos.", {texto:"¿Cuál vives más?", clase:"pregunta"}],
     construir:(z, listo) => {
       const efectos = [
-        ["Huida del bolívar", "Nadie quiere guardar bolívares: todos los cambian apenas cobran. Esa demanda presiona la tasa, y la tasa presiona los precios. Es un círculo."],
-        ["Sin crédito formal", "La casa, el carro o el negocio se compran de contado o no se compran. El hueco se llena con cuotas, sanes, préstamos entre familiares y prestamistas."],
-        ["Descalce de monedas", "Cobras en bolívares y muchos precios están en dólares. Cada salto de la tasa te pega a ti."],
+        ["Huida del bolívar", "Nadie quiere mantener bolívares: todos los convierten apenas cobran. Esa demanda de divisas presiona el tipo de cambio, y el tipo de cambio presiona los precios. Es un círculo vicioso."],
+        ["Sin crédito formal", "La vivienda, el vehículo o el negocio se compran de contado o no se compran. Ese vacío lo llenan las cuotas, los sanes (ahorro rotativo entre conocidos), los préstamos familiares y los prestamistas."],
+        ["Descalce de monedas", "Cobras en bolívares y muchos precios están en dólares. Cada salto del tipo de cambio afecta tu presupuesto."],
         ["Inflación en dólares", "Cuando la tasa sube menos que los precios, tu dólar compra menos aquí, aunque sigan siendo dólares."]];
       const cont = elegir(z, efectos.map(e => e[0]), k => {
         L.datos.m3_impacto = efectos[k][0];
@@ -1026,7 +1026,7 @@ const PANTALLAS = [
         nota(z, `<b>${efectos[k][0]}:</b> ${efectos[k][1]}`);
         listo(); });
     },
-    concepto:["Descalce de monedas", "Ganar en una moneda y gastar en otra: cada movimiento de la tasa te pega a ti."] }),
+    concepto:["Descalce de monedas", "Ganar en una moneda y gastar en otra: cada variación del tipo de cambio afecta tu presupuesto."] }),
 
   () => pl({momento:3, saltable:true, burbujas:[
       "Un dato más, opcional: el costo escondido del crédito informal.",
@@ -1046,11 +1046,11 @@ const PANTALLAS = [
         el("li", {}, "Calcula la tasa real antes de decidir: compara lo que te pagan con lo que suben los precios en el mismo período."),
         el("li", {}, "Calza tus monedas: lo que vas a gastar en bolívares esta semana, déjalo en bolívares. Lo que es para después, no lo dejes quieto sin comparar."),
         el("li", {}, "Paga pronto lo que tiene precio fijo en bolívares: cada día de espera es más caro."),
-        el("li", {}, "Antes de financiarte, pasa el costo a anual y en dólares."),
+        el("li", {}, "Antes de financiarte, expresa el costo como tasa anual y en dólares."),
         el("li", {}, "Anota la tasa del día en que cobras y en que pagas. Sin ese dato no sabes si ganaste o perdiste.")));
       listo(); } }),
 
-  () => pl({momento:3, burbujas:["Ahora tú mueves el mercado.", "Cambia cuánto suben los precios y cuánto sube el dólar oficial cada mes, y mira cuál opción conserva más poder de compra en tres meses."],
+  () => pl({momento:3, burbujas:["Ahora tú mueves el mercado.", "Cambia cuánto suben los precios y cuánto sube el dólar oficial cada mes, y mira cuál opción conserva más poder adquisitivo en tres meses."],
     construir:(z, listo) => {
       let i = DATOS.inflMes, d = DATOS.dolarMes; const vistos = new Set();
       const vals = () => [["A · Plazo al 46%", poder(0,i,d)], ["B · Cuenta al 10%", poder(1,i,d)], ["C · Dólares", poder(2,i,d)], ["D · Comprar hoy", 1]];
@@ -1064,10 +1064,10 @@ const PANTALLAS = [
         el("p", {class:"leyenda"}, "Prueba al menos tres combinaciones."));
     } }),
 
-  () => pl({momento:3, boton:"Decidir otra vez", concepto:["No hay refugio fijo", "Lo que conserva tu poder de compra depende de comparar precios, tasas y tipo de cambio en el mismo período."], burbujas:[
+  () => pl({momento:3, boton:"Decidir otra vez", concepto:["No hay refugio fijo", "Lo que conserva tu poder adquisitivo depende de comparar precios, tasas y tipo de cambio en el mismo período."], burbujas:[
       "Cuando la tasa de cambio se queda quieta y los precios suben, ni el banco ni el dólar te protegen del todo.",
       "Cuando la tasa salta más que los precios, el dólar vuelve a ganar.",
-      "No hay un refugio fijo. Hay números que cambian, y se pueden leer."] }),
+      "No hay un refugio fijo. Hay variables que cambian, y se pueden analizar."] }),
 
   // ---- Momento 4 · Vuelve a decidir
   () => pl({auto:true, momento:4, burbujas:[
