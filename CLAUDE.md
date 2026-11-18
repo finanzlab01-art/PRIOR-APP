@@ -15,12 +15,12 @@ Lema: "El futuro se practica." Subtítulo: "Equivócate aquí. Acierta afuera."
 - Invitaciones con `?ref=` en el enlace.
 - Medición anónima en la tabla `visitas_pasos` (solo insertar; uuid de visita por pestaña en
   sessionStorage, cada paso una vez por visita, sin datos personales). Pasos: `bienvenida`,
-  `perfil_1`–`perfil_2`, `situacion_1`–`situacion_10`, `resultado`, `con_sesion`,
+  `perfil_1`–`perfil_3`, `situacion_1`–`situacion_11`, `resultado`, `con_sesion`,
   `leccion_intro`, `leccion_1`–`leccion_N` (N = pantallas de la lección), `leccion_fin`, y después, solo si no había sesión:
   `cuenta`, `cuenta_creada` o `sin_cuenta`. La cuenta se pide al terminar la lección 1, no antes.
 
 ## Cómo funciona hoy
-- Mini perfil (edad y moneda en que cobra) y diagnóstico v4: 10 situaciones, con opción
+- Mini perfil (edad, moneda de ingresos y fondo de emergencia) y diagnóstico v5: 11 situaciones, con opción
   E "Otra respuesta" (texto libre que no cuenta para la mezcla).
 - El diagnóstico es un test: al elegir no se muestra ninguna consecuencia ni si acertó;
   pasa solo a la siguiente situación. La interpretación de las decisiones va al final.
@@ -41,9 +41,11 @@ Lema: "El futuro se practica." Subtítulo: "Equivócate aquí. Acierta afuera."
 - Nunca recomendar activos concretos ni prometer rendimientos.
 
 ## Voz
-Tuteo, español venezolano claro, frases cortas, una idea por pantalla. Sin jerga financiera
-sin explicar. Cálida, nunca regañona: la app no debe generar tensión ni hacer sentir que
-la persona decidió mal.
+Tuteo, español claro y vocabulario técnico (no complejo): se usan los términos propios de las
+finanzas y la economía (poder adquisitivo, tasa real, rendimiento, liquidez, instrumento, fondo
+de emergencia) y se explican en una frase la primera vez que aparecen. Frases claras, una idea
+por pantalla. Cálida, nunca regañona: la app no debe generar tensión ni hacer sentir que la
+persona decidió mal. (Cambio del 18 nov 2026: antes la voz era de lenguaje simple.)
 
 ## Reglas de trabajo
 - Antes de editar, explica tu plan y espera mi confirmación.
