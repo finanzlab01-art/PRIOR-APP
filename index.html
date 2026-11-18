@@ -215,148 +215,163 @@ textarea{width:100%; min-height:90px; font:inherit; color:var(--texto); backgrou
 // Puntos de necesidad: [Economía, Finanzas, Conducta]. Los máximos se calculan solos según las variantes que vio cada persona.
 const PERFIL_PREGUNTAS = [
   { clave:"edad", pregunta:"¿Cuántos años tienes?", opciones:["18 a 24","25 a 34","35 a 44","45 o más"] },
-  { clave:"moneda", pregunta:"¿En qué recibes la mayor parte de lo que ganas?",
-    opciones:["Bolívares","Dólares en efectivo","Dólares en una cuenta o billetera digital","USDT u otra cripto","Una mezcla"] }
+  { clave:"moneda", pregunta:"¿En qué moneda recibes la mayor parte de tus ingresos?",
+    opciones:["Bolívares","Dólares en efectivo","Dólares en una cuenta o billetera digital","USDT u otra cripto","Una mezcla"] },
+  { clave:"emergencia", pregunta:"¿Cuentas con un fondo de emergencia equivalente a tres meses de gastos?",
+    opciones:["Sí, completo","Parcialmente","No cuento con uno"] }
 ];
 const MONEDA_TEXTO = { "Bolívares":"bolívares", "Dólares en efectivo":"dólares en efectivo",
   "Dólares en una cuenta o billetera digital":"dólares en una cuenta o billetera digital",
   "USDT u otra cripto":"USDT", "Una mezcla":"bolívares y dólares" };
 const grupoMoneda = m => (m === "Bolívares" || m === "Una mezcla") ? "bs" : "usd";
 
+/* Diagnóstico v5 (18 nov 2026): 11 situaciones con vocabulario técnico, a partir de las correcciones del profesor.
+   BAREMO de puntajes [Economía, Finanzas, Conducta], de 0 a 3. Mide la brecha que revela la decisión, no si "acertó":
+     0 = decisión coherente con el criterio de esa materia (sin brecha)
+     1 = brecha leve (acierta en lo principal, omite un costo o un dato)
+     2 = brecha moderada (decide sin evaluar riesgo, liquidez, costo o poder adquisitivo)
+     3 = brecha marcada; en Conducta, indica que la creencia heredada de la crisis está activa
+   Una creencia se marca como activa cuando el puntaje de Conducta es 3. */
 const ESCENARIOS = [
   { id:"E1", bloque:"Economía", dogma:"El efectivo en dólares es el refugio",
-    contexto:"Imagina que vendes algo usado por el equivalente a 100 dólares. El comprador puede pagarte hoy en bolívares a la tasa oficial del BCV, o en dólares dentro de una semana. La tasa del mercado está por encima de la oficial.",
-    pregunta:"¿Qué haces?",
+    contexto:"Vendes un bien usado cuyo valor es de US$100. El comprador te ofrece pagarte hoy en bolívares, a la tasa oficial del BCV. La tasa del mercado paralelo se ubica por encima de la oficial. Necesitas el dinero hoy para cubrir gastos corrientes.",
+    pregunta:"¿Qué harías?",
     opciones:[
-      ["Acepto los bolívares hoy y los uso en lo que necesito","Si después pagas cosas a tasa de mercado, pierdes la diferencia entre las dos tasas.",[2,1,1]],
-      ["Acepto los bolívares hoy y los cambio a dólares para ahorrarlos","Cambias a tasa de mercado y pagas el costo del cambio: terminas con menos de 100 dólares.",[1,1,2]],
-      ["Espero la semana y cobro en dólares","El trato se puede caer, y pasas una semana sin el dinero.",[1,1,3]],
-      ["Le propongo que me pague en bolívares a la tasa del mercado","La negociación puede enfriar la venta.",[0,1,1]] ] },
+      ["Acepto los bolívares y los destino a mis gastos","Si luego pagas a la tasa del mercado, asumes el diferencial cambiario.",[2,1,1]],
+      ["Propongo que me paguen en bolívares a la tasa del mercado","La negociación puede enfriar la venta.",[0,1,1]],
+      ["Acepto los bolívares y pacto el saldo restante en dólares para la próxima semana","Reduces el diferencial en una parte, pero asumes el riesgo de incumplimiento sobre el saldo.",[1,1,1]] ] },
+  { id:"E1b", bloque:"Economía", dogma:"El efectivo en dólares es el refugio",
+    contexto:"Vendes un bien usado cuyo valor es de US$100. No necesitas el dinero esta semana y tu objetivo es preservar su valor. El comprador puede pagarte hoy en bolívares, a la tasa oficial del BCV, o en dólares dentro de una semana. La tasa del mercado paralelo se ubica por encima de la oficial.",
+    pregunta:"¿Qué harías?",
+    opciones:[
+      ["Acepto los bolívares y los convierto a dólares para ahorrarlos","Conviertes a la tasa del mercado y asumes el costo de la conversión: terminas con menos de US$100.",[1,1,2]],
+      ["Espero una semana y cobro en dólares","Asumes el riesgo de incumplimiento y una semana sin liquidez.",[1,1,3]],
+      ["Propongo que me paguen en bolívares a la tasa del mercado","La negociación puede enfriar la venta.",[0,1,1]] ] },
   { id:"E2", bloque:"Economía", dogma:"Gastar todo apenas cobras, por si acaso",
     variantes:{
-      bs:{ contexto:"Imagina que hoy es tu día de cobro y te pagan en bolívares. Los precios suben un poco cada semana.",
-        pregunta:"¿Qué haces con lo que no vas a gastar esta semana?",
+      bs:{ contexto:"Hoy recibes tu ingreso en bolívares. Los precios registran aumentos semanales.",
+        pregunta:"¿Qué harías con el excedente que no vas a gastar esta semana?",
         opciones:[
-          ["Lo gasto de una vez en lo del mes, antes de que suba","Compras de más y te quedas sin colchón para imprevistos.",[1,2,3]],
-          ["Lo cambio a dólares y lo ahorro","Te cubres si sube el dólar; si los precios suben más que la tasa, ese ahorro también compra menos.",[1,1,2]],
-          ["Lo dejo en la cuenta y lo voy usando","Pierde poder de compra mientras espera.",[3,1,1]],
-          ["Pago lo fijo y reparto el resto entre bolívares y dólares","Cada cambio cuesta, y hay que estar pendiente de las dos monedas.",[1,1,0]] ] },
-      usd:{ contexto:"Imagina que hoy es tu día de cobro y te pagan en {moneda}. Muchos de tus gastos son en bolívares y los precios suben un poco cada semana.",
-        pregunta:"¿Cómo manejas lo del mes?",
+          ["Lo gasto de inmediato en las compras del mes, antes de nuevos aumentos","Anticipas consumo y te quedas sin fondo para imprevistos.",[1,2,3]],
+          ["Lo convierto a dólares para ahorrarlo","Te cubres si el dólar sube; si los precios suben más que la tasa, ese ahorro también pierde poder adquisitivo.",[1,1,2]],
+          ["Lo mantengo en la cuenta y lo voy utilizando","Pierde poder adquisitivo mientras espera.",[3,1,1]],
+          ["Cubro los gastos fijos y distribuyo el excedente entre bolívares y dólares","Cada conversión implica un costo y requiere seguimiento de ambas monedas.",[1,1,0]] ] },
+      usd:{ contexto:"Hoy recibes tu ingreso en {moneda}. Una parte importante de tus gastos es en bolívares y los precios registran aumentos semanales.",
+        pregunta:"¿Cómo administrarías tu ingreso del mes?",
         opciones:[
-          ["Cambio todo a bolívares hoy y pago todo de una vez","Los bolívares que no gastas enseguida pierden valor.",[2,1,3]],
-          ["Cambio a bolívares solo lo de cada semana","Más vueltas y más costos de cambio.",[0,1,0]],
-          ["Ahorro todo en dólares y cambio solo cuando no me queda otra","Puedes terminar cambiando cuando la tasa te conviene menos.",[1,1,2]],
-          ["Pago en dólares donde me lo acepten, aunque el precio sea más alto","El precio en dólares a veces es más caro que en bolívares a la tasa del día.",[2,1,1]] ] } } },
+          ["Convierto todo a bolívares hoy y pago los gastos del mes de una vez","Los bolívares que no gastas de inmediato pierden poder adquisitivo.",[2,1,3]],
+          ["Convierto a bolívares solo el monto de cada semana","Implica más operaciones y más costos de conversión.",[0,1,0]],
+          ["Mantengo todo en dólares y convierto solo cuando es indispensable","Puedes terminar convirtiendo en un momento en que la tasa te favorece menos.",[1,1,2]],
+          ["Pago en dólares donde lo acepten, aunque el precio sea mayor","El precio en dólares suele ser más alto que el equivalente en bolívares a la tasa del día.",[2,1,1]] ] } } },
   { id:"E3", bloque:"Economía", dogma:"Lo de hoy vale más, aunque cueste mañana",
-    contexto:"Imagina que necesitas cambiar un electrodoméstico de 600 USD. Puedes pagarlo de contado o en tres cuotas sin intereses.",
-    pregunta:"¿Qué haces?",
+    contexto:"Necesitas comprar un electrodoméstico cuyo valor es de US$600. Dispones de ese monto ahorrado en dólares en efectivo. Puedes pagarlo de contado o en tres cuotas sin intereses.",
+    pregunta:"¿Qué harías?",
     opciones:[
-      ["Lo pago de contado: prefiero no deber","Tus ahorros bajan de golpe y quedas con menos colchón.",[2,1,2]],
-      ["Cuotas, y mis ahorros se quedan guardados en dólares","Pagas lo mismo, pero ese ahorro no genera nada mientras tanto.",[1,1,1]],
-      ["Cuotas, y pongo mis ahorros donde generen algo mientras pago","Si eso baja o no lo puedes sacar a tiempo, se complican las cuotas.",[0,1,0]],
-      ["Cuotas, y con lo ahorrado compro otra cosa que necesitaba","Quedas con dos compromisos a la vez.",[2,2,3]] ] },
+      ["Pago de contado para evitar endeudarme","Tu ahorro disminuye de golpe y reduces tu fondo de reserva.",[2,1,2]],
+      ["Pago en tres cuotas y mantengo mis ahorros en dólares","Pagas el mismo monto, pero el ahorro no genera rendimiento mientras tanto.",[1,1,1]],
+      ["Pago en tres cuotas y coloco mis ahorros en instrumentos que me permitan generar rendimientos mientras voy pagando","Si el instrumento pierde valor o no puedes liquidarlo a tiempo, se compromete el pago de las cuotas.",[0,1,0]],
+      ["Pago en tres cuotas y destino lo ahorrado a otra compra necesaria","Asumes dos compromisos de pago simultáneos.",[2,2,3]] ] },
   { id:"F1", bloque:"Finanzas", dogma:"Si a otros les funciona, a mí también",
-    contexto:"Imagina que desde este mes te sobran 100 USD cada mes.",
-    pregunta:"¿Qué harías con ellos?",
+    contexto:"Dispones de un excedente mensual de US$100.",
+    pregunta:"¿Qué harías con ese monto?",
     opciones:[
-      ["Los ahorraría en dólares hasta saber qué hacer","No pierdes contra la tasa, pero no generan nada y el dólar también pierde poder de compra.",[1,2,2]],
-      ["Los pondría donde me recomiende alguien que ya invierte","Dependes de lo que otro sabe o cree saber.",[0,2,3]],
-      ["Todavía no tengo claro dónde ponerlos","El dinero se queda quieto mientras decides.",[1,3,0]],
-      ["Los repartiría entre ahorro y algo que dé rendimiento","Tienes que entender el riesgo de cada parte.",[0,1,0]] ] },
+      ["Lo ahorraría en dólares hasta definir una estrategia","Preservas el capital frente a la tasa, pero no genera rendimiento y el dólar también pierde poder adquisitivo.",[1,2,2]],
+      ["Lo colocaría donde me lo recomiende una persona con experiencia en inversión","Tu decisión depende del criterio de un tercero.",[0,2,3]],
+      ["Aún no tengo definido dónde colocarlo","El dinero permanece inmovilizado mientras decides.",[1,3,0]],
+      ["Lo distribuiría entre ahorro e instrumentos que generen rendimiento","Requiere comprender el riesgo y la liquidez de cada parte.",[0,1,0]] ] },
   { id:"F2", bloque:"Finanzas", dogma:"Invertir es peligroso, o es copiar al que le va bien",
-    contexto:"Imagina que alguien cercano te cuenta que compró acciones en la Bolsa de Valores de Caracas a través de una casa de bolsa (empresa autorizada para comprar y vender acciones por ti), y que este año le ha ido bien.",
-    pregunta:"¿Qué piensas?",
+    contexto:"Una persona de tu entorno te comenta que adquirió acciones en la Bolsa de Valores de Caracas a través de una casa de bolsa (intermediario autorizado para comprar y vender valores por cuenta de terceros) y que este año obtuvo buenos resultados.",
+    pregunta:"¿Qué harías?",
     opciones:[
-      ["Prefiero no meterme: pueden bajar y no recuperar lo que puse","Te quedas fuera de una opción que no conoces.",[2,2,2]],
-      ["Me interesa, pero tendría que averiguar cómo funciona","Mientras averiguas, no decides.",[1,3,0]],
-      ["Compraría las mismas acciones que compró esa persona","Copias sin saber por qué subieron ni cuándo salir.",[1,2,3]],
-      ["Me interesa, y repartiría entre varias acciones","Más comisiones y más tiempo para entender cada una.",[1,1,0]] ] },
+      ["No invertiría: el precio puede caer y podría no recuperar el capital","Te excluyes de una alternativa que no conoces.",[2,2,2]],
+      ["Investigaría cómo funciona antes de decidir","Mientras investigas, no decides.",[1,3,0]],
+      ["Compraría las mismas acciones que adquirió esa persona","Replicas la decisión sin conocer los fundamentos ni el momento de salida.",[1,2,3]],
+      ["Invertiría y diversificaría entre varias acciones","Aumentan las comisiones y el tiempo de análisis de cada emisora.",[1,1,0]] ] },
   { id:"F3", bloque:"Finanzas", dogma:"El efectivo como refugio, o todo a una sola apuesta",
-    contexto:"Imagina que recibes un ingreso extra de 500 USD.",
-    pregunta:"¿Cómo lo repartes?",
+    contexto:"Recibes un ingreso extra de US$500.",
+    pregunta:"¿Qué harías con ese monto?",
     opciones:[
-      ["Lo ahorro en dólares en efectivo","No genera nada, y hay riesgo de robo o pérdida.",[1,2,3]],
-      ["Lo pongo todo en algo que creo que va a subir","Si baja, lo pierdes todo junto.",[1,3,2]],
-      ["Una parte para emergencias y el resto en dos o tres cosas distintas","Cada parte rinde poco y hay que estar pendiente de varias.",[0,1,0]],
-      ["Lo uso para adelantar deudas o cuotas","Te quitas compromisos, pero te quedas sin colchón.",[1,2,1]] ] },
+      ["Lo ahorro en dólares en efectivo","No genera rendimiento y existe riesgo de robo o pérdida.",[1,2,3]],
+      ["Coloco este dinero en una opción que me genere rendimiento","Falta evaluar el riesgo y la liquidez de esa opción.",[0,2,1]],
+      ["Lo destino a adelantar deudas o cuotas","Reduces compromisos, pero te quedas sin fondo de reserva.",[1,2,1]],
+      ["Evalúo si existen ventajas entre ahorrar o pagar deuda","Comparas el costo de la deuda con el rendimiento posible del ahorro antes de decidir.",[0,1,0]] ] },
   { id:"C1", bloque:"Conducta y sociedad", dogma:"El efectivo en dólares es el refugio",
-    contexto:"Imagina que tienes ahorros en dólares en efectivo guardados en casa desde hace un par de años. Alguien te pregunta por qué no los mueves.",
-    pregunta:"¿Qué le respondes?",
+    contexto:"Mantienes ahorros en dólares en efectivo, guardados en tu vivienda desde hace aproximadamente dos años. Alguien te pregunta por qué no los has colocado en otra alternativa.",
+    pregunta:"¿Qué responderías?",
     opciones:[
-      ["Es lo más seguro: lo que está en mi casa nadie me lo quita","Pierden valor cada año (el dólar también tiene inflación) y pueden robarse.",[1,2,3]],
-      ["Sé que pierden valor, pero no confío en otra opción","Pagas un costo seguro por miedo a uno posible.",[1,2,2]],
-      ["Son para emergencias: los quiero a la mano","Probablemente es más de lo que una emergencia necesita.",[1,1,1]],
-      ["Los movería, pero espero a que la situación esté más clara","La situación casi nunca está del todo clara.",[1,1,3]] ] },
+      ["Es la opción más segura: lo que está en mi casa nadie me lo quita","Pierde poder adquisitivo cada año (el dólar también registra inflación) y existe riesgo de robo.",[1,2,3]],
+      ["Sé que pierde valor, pero no confío en otras alternativas","Aceptas una pérdida segura por temor a una posible.",[1,2,2]],
+      ["Es mi fondo de emergencia: necesito disponibilidad inmediata","Probablemente el monto excede lo que una emergencia requiere.",[1,1,1]],
+      ["Los colocaría, pero espero mayor claridad en el entorno económico","La claridad total casi nunca llega, y esperar también tiene un costo.",[1,1,3]] ] },
   { id:"C4", bloque:"Conducta y sociedad", dogma:"Cuando sube el dólar, hay que correr",
-    contexto:"Imagina que esta semana el dólar oficial sube 5%.",
-    pregunta:"¿Qué es lo primero que piensas?",
+    contexto:"Esta semana el dólar oficial aumenta 5%.",
+    pregunta:"¿Qué harías?",
     opciones:[
-      ["Que tengo que cambiar mis bolívares ya, antes de que suba más","Si todos piensan igual, esa demanda empuja la tasa, y cambias cerca del pico.",[1,1,3]],
-      ["Que los precios van a subir pronto","Suele pasar, pero no en la misma medida ni al mismo tiempo.",[1,1,1]],
-      ["Que me afecta poco, porque cobro o ahorro en dólares","Los precios en bolívares también suben, y tu dólar compra menos aquí.",[2,1,2]],
-      ["Miraría cuánto subieron los precios en ese mismo tiempo","Necesitas el dato de precios, y no siempre está a la mano.",[0,0,1]] ] },
+      ["Convierto mis bolívares a dólares de inmediato, antes de un nuevo aumento","Si muchas personas actúan igual, esa demanda presiona la tasa y conviertes cerca del máximo.",[1,1,3]],
+      ["Reviso cuánto aumentaron los precios en ese mismo período antes de decidir","Necesitas el dato de inflación, que no siempre está disponible.",[0,0,1]],
+      ["Espero unos días para ver si la tasa se estabiliza","La espera también tiene costo si la tasa continúa subiendo.",[1,1,2]],
+      ["Adelanto compras porque anticipo aumentos de precios","Anticipas consumo sin certeza de que los precios se ajusten en la misma proporción.",[1,1,2]] ] },
   { id:"C2", bloque:"Conducta y sociedad", dogma:"Esperar es la mejor defensa",
-    contexto:"Piensa en algo de tu dinero que llevas un tiempo queriendo ordenar: ahorrar, invertir o salir de una deuda.",
-    pregunta:"¿Qué es lo que más te frena?",
+    contexto:"Piensa en una decisión financiera que has postergado: ahorrar, invertir o saldar una deuda.",
+    pregunta:"¿Qué factor te limita más?",
     opciones:[
-      ["La economía está muy incierta; espero a que se estabilice","La espera también tiene costo.",[2,1,3]],
-      ["Me falta saber más antes de dar el paso","Mientras aprendes, no decides.",[1,3,1]],
-      ["No tengo suficiente dinero para que valga la pena","Empezar con poco también enseña.",[1,2,2]],
-      ["Nada en particular: ya empecé","Lo siguiente es revisar si lo que hiciste te sigue conviniendo.",[0,1,0]] ] },
+      ["La incertidumbre económica: prefiero esperar a que se estabilice","La espera también tiene costo.",[2,1,3]],
+      ["Me falta información antes de actuar","Mientras te informas, no decides.",[1,3,1]],
+      ["Considero que el monto disponible es insuficiente","Empezar con un monto pequeño también genera aprendizaje.",[1,2,2]],
+      ["Ninguno en particular: ya inicié","Lo siguiente es evaluar si lo que hiciste sigue siendo conveniente.",[0,1,0]] ] },
   { id:"C3", bloque:"Conducta y sociedad", tipo:"dos_pasos", dogma:"Sé manejar mi dinero",
-    contexto:"Imagina que inviertes 100 USD. El primer año sube 10% y el segundo año baja 10%.",
-    pregunta:"¿Con cuánto te quedas?",
-    paso1:["100 USD","99 USD","101 USD","No estoy seguro"], correcta:1, maximo:[0,3,3],
-    pregunta2:"¿Qué tan seguro estás de tu respuesta?",
-    paso2:["Muy seguro","Algo seguro","Estoy adivinando"],
-    explicacion:"Subir 10% y luego bajar 10% no te deja igual: 100 sube a 110, y el 10% de 110 son 11, así que quedas en 99." }
+    contexto:"Inviertes US$100 en acciones. Al finalizar el primer año obtienes un rendimiento de 10%. Al culminar el segundo año, las acciones registran una caída de 10%.",
+    pregunta:"Si necesitas venderlas, ¿cuántos US$ recibirías?",
+    paso1:["US$100","US$99","US$101","No estoy seguro"], correcta:1, maximo:[0,3,3],
+    pregunta2:"¿Qué nivel de seguridad tienes sobre tu respuesta?",
+    paso2:["Muy seguro","Moderadamente seguro","Estoy estimando"],
+    explicacion:"Un rendimiento de 10% seguido de una caída de 10% no te deja en el mismo punto: US$100 pasa a US$110, y una caída de 10% sobre US$110 equivale a US$11, por lo que el valor final es US$99." }
 ];
 const LETRAS = ["A","B","C","D","E"];
 const MATERIAS = [
-  { nombre:"Economía", frase:"Cómo la inflación, las tasas y el tipo de cambio mueven el dinero que ganas." },
-  { nombre:"Finanzas", frase:"Qué hacer con lo que te sobra: riesgo, rendimiento y cómo repartir." },
-  { nombre:"Conducta y sociedad", frase:"Las creencias de la crisis que todavía deciden por ti." }
+  { nombre:"Economía", frase:"Cómo la inflación, las tasas de interés y el tipo de cambio afectan tu poder adquisitivo." },
+  { nombre:"Finanzas", frase:"Qué hacer con tu excedente: riesgo, rendimiento y cómo diversificar." },
+  { nombre:"Conducta y sociedad", frase:"Las creencias heredadas de la crisis que todavía influyen en tus decisiones." }
 ];
 
 // Resultado: por qué empieza la ruta en cada materia. {N} = decisiones donde pesó; {T} = decisiones que contaron.
 const POR_QUE = [
-  { con:"En {N} de tus {T} decisiones pesó más cómo se mueven la tasa, los precios y el bolívar. Por ahí empezamos: entender eso hace más fáciles todas las demás decisiones.",
-    sin:"En tus decisiones pesó más cómo se mueven la tasa, los precios y el bolívar. Por ahí empezamos: entender eso hace más fáciles todas las demás decisiones." },
-  { con:"En {N} de tus {T} decisiones, la duda estuvo en qué hacer con el dinero que sobra: dónde ponerlo, cuánto arriesgar y cómo repartirlo. Por ahí empezamos.",
-    sin:"En tus decisiones, la duda estuvo en qué hacer con el dinero que sobra: dónde ponerlo, cuánto arriesgar y cómo repartirlo. Por ahí empezamos." },
-  { con:"En {N} de tus {T} decisiones pesaron más las costumbres que dejó la crisis que los números del momento. Por ahí empezamos: no para borrarlas, sino para ver cuáles todavía te sirven.",
-    sin:"En tus decisiones pesaron más las costumbres que dejó la crisis que los números del momento. Por ahí empezamos: no para borrarlas, sino para ver cuáles todavía te sirven." }
+  { con:"En {N} de tus {T} decisiones pesó más la dinámica de la tasa de cambio, los precios y el bolívar. Por ahí empezamos: entender esas variables hace más sólidas todas las demás decisiones.",
+    sin:"En tus decisiones pesó más la dinámica de la tasa de cambio, los precios y el bolívar. Por ahí empezamos: entender esas variables hace más sólidas todas las demás decisiones." },
+  { con:"En {N} de tus {T} decisiones, la duda estuvo en qué hacer con el excedente: en qué instrumento colocarlo, cuánto riesgo asumir y cómo diversificarlo. Por ahí empezamos.",
+    sin:"En tus decisiones, la duda estuvo en qué hacer con el excedente: en qué instrumento colocarlo, cuánto riesgo asumir y cómo diversificarlo. Por ahí empezamos." },
+  { con:"En {N} de tus {T} decisiones pesaron más los hábitos que dejó la crisis que los datos del momento. Por ahí empezamos: no para descartarlos, sino para evaluar cuáles todavía te sirven.",
+    sin:"En tus decisiones pesaron más los hábitos que dejó la crisis que los datos del momento. Por ahí empezamos: no para descartarlos, sino para evaluar cuáles todavía te sirven." }
 ];
 const ELECCION_C3 = "Respondiste el cálculo de los porcentajes con mucha seguridad.";
 const CREENCIAS = {
   "El efectivo en dólares es el refugio": {
-    porque:"Durante años el bolívar perdía valor tan rápido que tener dólares en la mano era la forma más segura de no perderlo todo. Y los bancos no siempre dejaban sacar tu dinero.",
-    revisar:"Cuánto pierde también el dólar guardado, y cuándo conviene tenerlo a la mano y cuándo no." },
+    porque:"Durante años el bolívar perdía valor tan rápido que tener dólares en efectivo era la forma más segura de preservar tu patrimonio. Y los bancos no siempre permitían retirar tu dinero.",
+    revisar:"Cuánto poder adquisitivo pierde también el dólar guardado, y cuándo conviene mantener liquidez (dinero disponible de inmediato) y cuándo no." },
   "Gastar todo apenas cobras, por si acaso": {
-    porque:"Con precios que subían cada semana, gastar el mismo día era una forma de protegerte.",
-    revisar:"Cuándo gastar rápido te protege de verdad y cuándo te deja sin colchón para imprevistos." },
+    porque:"Con precios que subían cada semana, gastar el mismo día era una forma de proteger tu poder adquisitivo.",
+    revisar:"Cuándo gastar rápido te protege de verdad y cuándo te deja sin fondo de emergencia (reserva para imprevistos)." },
   "Lo de hoy vale más, aunque cueste mañana": {
-    porque:"Cuando no sabes cuánto costarán las cosas mañana, asegurar hoy lo que puedes tener es una reacción lógica.",
-    revisar:"Cómo pesar una compra de hoy contra lo que vas a deber después, y cuándo dos compromisos a la vez se vuelven un problema." },
+    porque:"Cuando no sabes cuánto costarán las cosas mañana, asegurar hoy lo que puedes adquirir es una reacción lógica.",
+    revisar:"Cómo comparar el beneficio de una compra hoy con la deuda que genera, y cuándo dos compromisos simultáneos se vuelven un problema de flujo de caja (lo que entra y sale de tu bolsillo)." },
   "Si a otros les funciona, a mí también": {
-    porque:"Cuando hay poca información confiable, seguir a alguien cercano que ya lo hizo es la forma más rápida de decidir.",
-    revisar:"Qué preguntar antes de seguir un consejo, y por qué lo que le sirve a otra persona depende de su situación, no de la tuya." },
+    porque:"Cuando hay poca información confiable, seguir a alguien cercano que ya lo hizo es el atajo más rápido para decidir.",
+    revisar:"Qué preguntar antes de seguir un consejo, y por qué lo que le sirve a otra persona depende de su situación financiera, no de la tuya." },
   "Invertir es peligroso, o es copiar al que le va bien": {
-    porque:"Mucha gente vio perder ahorros en crisis, estafas o empresas que cayeron. Desconfiar tiene razones.",
-    revisar:"Qué es el riesgo y cómo se reparte, para que invertir no sea ni un salto al vacío ni una copia." },
+    porque:"Mucha gente vio perder sus ahorros en crisis, estafas o quiebras de empresas. Desconfiar tiene razones.",
+    revisar:"Qué es el riesgo y cómo se diversifica (repartir el dinero en opciones distintas), para que invertir no sea ni un salto al vacío ni una copia." },
   "El efectivo como refugio, o todo a una sola apuesta": {
-    porque:"Cuando todo parece incierto, uno tiende a los extremos: guardarlo todo o ponerlo todo en lo que parece que va a subir.",
-    revisar:"Cómo repartir un dinero extra entre emergencias y opciones distintas, para no depender de una sola." },
+    porque:"Cuando todo parece incierto, tendemos a los extremos: conservarlo todo en efectivo o concentrarlo todo en lo que parece que va a subir.",
+    revisar:"Cómo distribuir un ingreso extra entre fondo de emergencia e instrumentos distintos, para no depender de uno solo." },
   "Cuando sube el dólar, hay que correr": {
-    porque:"En años de devaluación fuerte, cada día de espera costaba. Cambiar rápido era una defensa real.",
-    revisar:"Cómo leer una subida del dólar junto con lo que pasa con los precios, antes de correr a cambiar." },
+    porque:"En años de devaluación fuerte, cada día de espera costaba. Convertir rápido a dólares era una defensa real.",
+    revisar:"Cómo interpretar una subida del dólar junto con la inflación, antes de apresurarte a cambiar." },
   "Esperar es la mejor defensa": {
-    porque:"Si las reglas cambian cada poco tiempo, esperar a que todo se calme parece lo más prudente.",
-    revisar:"Cuánto cuesta esperar, y cómo dar pasos pequeños aunque el panorama no esté claro." },
+    porque:"Si las reglas cambian cada poco tiempo, esperar a que el entorno se estabilice parece lo más prudente.",
+    revisar:"Cuánto cuesta esperar (el costo de oportunidad), y cómo dar pasos pequeños aunque el panorama no esté claro." },
   "Sé manejar mi dinero": {
-    porque:"Sobrevivir años de crisis enseña muchísimo, y es natural confiar en lo que ya aprendiste.",
-    revisar:"Algunos cálculos que engañan a casi todos, como los porcentajes que suben y bajan, y cómo comprobar antes de confiar." }
+    porque:"Atravesar años de crisis enseña muchísimo, y es natural confiar en lo que ya aprendiste.",
+    revisar:"Algunos cálculos que engañan a casi todos, como las variaciones porcentuales sucesivas (subir y bajar un mismo porcentaje), y cómo verificar antes de confiar." }
 };
 
 /* ---------- Conexión con Supabase ---------- */
@@ -491,7 +506,7 @@ function bienvenida(){
   registrarPaso("bienvenida");
   const guia = el("div", {class:"guia"});
   const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
-    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{} });
+    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{version:"v5"} });
     perfil(0); }}, "Empezar");
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
@@ -504,7 +519,7 @@ function bienvenida(){
   );
   escribir(guia, [
     {texto:"Hola. Antes de enseñarte algo, quiero ver cómo decides tú."},
-    {texto:`Primero, dos preguntas rápidas sobre ti. Después, ${ESCENARIOS.length} situaciones. No hay respuestas correctas: elige lo que harías de verdad.`}
+    {texto:`Primero, tres preguntas rápidas sobre ti. Después, ${ESCENARIOS.length} situaciones. No hay respuestas correctas: elige lo que harías de verdad.`}
   ], () => empezar.disabled = false);
 }
 
@@ -674,15 +689,15 @@ function resultado(){
 
   const linea = (etiqueta, texto) => el("p", {}, el("b", {}, etiqueta), texto);
   const creencias = estado.detalleCreencias.length ? el("section", {class:"creencias"},
-    el("h2", {}, "Creencias que vamos a revisar contigo"),
-    el("p", {class:"sublema"}, "Ninguna es un error. Son formas de decidir que aprendimos en años difíciles."),
+    el("h2", {}, "Creencias heredadas que vamos a revisar contigo"),
+    el("p", {class:"sublema"}, "Ninguna es un error. Son atajos para decidir (heurísticas) que aprendimos en años difíciles."),
     ...estado.detalleCreencias.slice(0,3).map(({dogma, eleccion}) => el("div", {class:"tarjeta"},
       el("h3", {}, dogma),
       linea("Lo que elegiste:", eleccion === ELECCION_C3 ? eleccion : `«${eleccion}»`),
       linea("Por qué tiene sentido:", CREENCIAS[dogma].porque),
       linea("Lo que vamos a revisar:", CREENCIAS[dogma].revisar))))
     : el("section", {class:"creencias"}, el("div", {class:"tarjeta"},
-      el("p", {}, "No apareció ninguna creencia fuerte en tus decisiones. Es una buena base: tu ruta se va a enfocar más en afinar cómo lees los números que en revisar costumbres.")));
+      el("p", {}, "No apareció ninguna creencia fuerte en tus decisiones. Es una buena base: tu ruta se va a enfocar más en afinar el análisis de las cifras que en revisar hábitos.")));
 
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
@@ -759,8 +774,8 @@ const poder = (op, i, d) => {
   if (op === 2) return Math.pow(1+d, 3) * DATOS.costoCambio / c;
   return 1;
 };
-const OPC_LECCION = ["Los pongo a plazo. 46% es más de lo que paga casi cualquier cosa.",
-  "Los dejo en la cuenta. Ahora paga 10% y los tengo a la mano.",
+const OPC_LECCION = ["Los coloco a plazo. 46% es más de lo que rinde casi cualquier otra opción.",
+  "Los dejo en la cuenta. Paga 10% y tengo liquidez: puedo usarlos cuando quiera.",
   "Los cambio hoy a dólares y los guardo hasta que los necesite.",
   "Compro hoy cosas que sé que voy a usar en esos tres meses."];
 const OPC_CORTAS = ["Plazo al 46%", "Cuenta al 10%", "Dólares", "Comprar hoy lo que usaré"];
@@ -911,7 +926,7 @@ let PANTALLAS = [
       const textos = [
         `A plazo recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.plazo*3/12))}, pero compras ${pct(1-poder(0, DATOS.inflMes, DATOS.dolarMes))} menos que hoy.`,
         `En la cuenta recibes Bs. ${fmt(DATOS.mitad*(1+DATOS.cuenta*3/12))} y compras ${pct(1-poder(1, DATOS.inflMes, DATOS.dolarMes))} menos.`,
-        `Conservas 50 dólares, pero la tasa subió cerca de 3,5% al mes y los precios 6,2%. Tus dólares compran unos ${pct(1-poder(2, DATOS.inflMes, DATOS.dolarMes), 0)} menos aquí. Sí, los dólares también pierden.`,
+        `Conservas 50 dólares, pero la tasa subió cerca de 3,5% al mes y los precios 6,2%. Tus dólares compran unos ${pct(1-poder(2, DATOS.inflMes, DATOS.dolarMes), 0)} menos aquí. Sí: los dólares también pierden poder adquisitivo.`,
         "Congelas el precio de esas cosas. Funciona solo con lo que de verdad vas a usar y puedes guardar."];
       nota(z, `<b>Tu opción:</b> ${textos[op]}`);
       z.append(el("p", {class:"fuente"}, DATOS.fuente));
@@ -919,8 +934,8 @@ let PANTALLAS = [
 
   () => {
     const op = L.datos.m1_opcion;
-    const A = "El 46% suena alto, pero un número más grande no significa más poder de compra. En economía se llama ilusión monetaria: mirar la cifra y no lo que esa cifra compra.";
-    const C = "Aquí la creencia es “el dólar siempre protege”. Lo hizo durante años de devaluación fuerte. Pero cuando la tasa se mueve más lento que los precios, el dólar también pierde poder de compra en Venezuela.";
+    const A = "El 46% suena alto, pero un número más grande no significa más poder adquisitivo (lo que tu dinero puede comprar). En economía se llama ilusión monetaria: mirar la cifra y no lo que esa cifra compra.";
+    const C = "Aquí la creencia es “el dólar siempre protege”. Lo hizo durante años de devaluación fuerte. Pero cuando la tasa se mueve más lento que los precios, el dólar también pierde poder adquisitivo en Venezuela.";
     const primera = op === "C" ? C : A;
     const segunda = op === "C" ? A : C;
     pl({momento:2, burbujas:[
@@ -932,7 +947,7 @@ let PANTALLAS = [
         btn.addEventListener("click", () => { extra.classList.remove("oculto"); btn.remove(); ganar("m2b", 1, "exploraste las dos creencias"); });
         extra.append(el("div", {class:"burbuja"}, op === "A" || op === "C" ? segunda : C));
         z.append(btn, extra);
-        z.append(el("div", {class:"tarjeta"}, el("p", {}, "Ninguna de las dos es tonta: las dos tuvieron sentido en otro momento. La pregunta es qué dicen los números hoy.")));
+        z.append(el("div", {class:"tarjeta"}, el("p", {}, "Las dos tuvieron sentido en otro momento. La pregunta es qué dicen los datos hoy.")));
         listo(); },
       concepto:["Ilusión monetaria", "Mirar la cifra (46%, 100 dólares) y no lo que esa cifra compra."] });
   },
@@ -998,12 +1013,12 @@ let PANTALLAS = [
     concepto:["Crédito indexado (UVC)", "Una deuda que se ajusta con el tipo de cambio: si el bolívar cae, lo que debes sube."] }),
 
   // ---- Momento 3b · El impacto
-  () => pl({auto:true, momento:3, burbujas:["Esto le causa cuatro efectos a tu dinero que vives sin verlos.", {texto:"¿Cuál vives más?", clase:"pregunta"}],
+  () => pl({auto:true, momento:3, burbujas:["Esto produce cuatro efectos sobre tu dinero que quizás vives sin notarlos.", {texto:"¿Cuál vives más?", clase:"pregunta"}],
     construir:(z, listo) => {
       const efectos = [
-        ["Huida del bolívar", "Nadie quiere guardar bolívares: todos los cambian apenas cobran. Esa demanda presiona la tasa, y la tasa presiona los precios. Es un círculo."],
-        ["Sin crédito formal", "La casa, el carro o el negocio se compran de contado o no se compran. El hueco se llena con cuotas, sanes, préstamos entre familiares y prestamistas."],
-        ["Descalce de monedas", "Cobras en bolívares y muchos precios están en dólares. Cada salto de la tasa te pega a ti."],
+        ["Huida del bolívar", "Nadie quiere mantener bolívares: todos los convierten apenas cobran. Esa demanda de divisas presiona el tipo de cambio, y el tipo de cambio presiona los precios. Es un círculo vicioso."],
+        ["Sin crédito formal", "La vivienda, el vehículo o el negocio se compran de contado o no se compran. Ese vacío lo llenan las cuotas, los sanes (ahorro rotativo entre conocidos), los préstamos familiares y los prestamistas."],
+        ["Descalce de monedas", "Cobras en bolívares y muchos precios están en dólares. Cada salto del tipo de cambio afecta tu presupuesto."],
         ["Inflación en dólares", "Cuando la tasa sube menos que los precios, tu dólar compra menos aquí, aunque sigan siendo dólares."]];
       const cont = elegir(z, efectos.map(e => e[0]), k => {
         L.datos.m3_impacto = efectos[k][0];
@@ -1011,7 +1026,7 @@ let PANTALLAS = [
         nota(z, `<b>${efectos[k][0]}:</b> ${efectos[k][1]}`);
         listo(); });
     },
-    concepto:["Descalce de monedas", "Ganar en una moneda y gastar en otra: cada movimiento de la tasa te pega a ti."] }),
+    concepto:["Descalce de monedas", "Ganar en una moneda y gastar en otra: cada variación del tipo de cambio afecta tu presupuesto."] }),
 
   () => pl({momento:3, saltable:true, burbujas:[
       "Un dato más, opcional: el costo escondido del crédito informal.",
@@ -1031,11 +1046,11 @@ let PANTALLAS = [
         el("li", {}, "Calcula la tasa real antes de decidir: compara lo que te pagan con lo que suben los precios en el mismo período."),
         el("li", {}, "Calza tus monedas: lo que vas a gastar en bolívares esta semana, déjalo en bolívares. Lo que es para después, no lo dejes quieto sin comparar."),
         el("li", {}, "Paga pronto lo que tiene precio fijo en bolívares: cada día de espera es más caro."),
-        el("li", {}, "Antes de financiarte, pasa el costo a anual y en dólares."),
+        el("li", {}, "Antes de financiarte, expresa el costo como tasa anual y en dólares."),
         el("li", {}, "Anota la tasa del día en que cobras y en que pagas. Sin ese dato no sabes si ganaste o perdiste.")));
       listo(); } }),
 
-  () => pl({momento:3, burbujas:["Ahora tú mueves el mercado.", "Cambia cuánto suben los precios y cuánto sube el dólar oficial cada mes, y mira cuál opción conserva más poder de compra en tres meses."],
+  () => pl({momento:3, burbujas:["Ahora tú mueves el mercado.", "Cambia cuánto suben los precios y cuánto sube el dólar oficial cada mes, y mira cuál opción conserva más poder adquisitivo en tres meses."],
     construir:(z, listo) => {
       let i = DATOS.inflMes, d = DATOS.dolarMes; const vistos = new Set();
       const vals = () => [["A · Plazo al 46%", poder(0,i,d)], ["B · Cuenta al 10%", poder(1,i,d)], ["C · Dólares", poder(2,i,d)], ["D · Comprar hoy", 1]];
@@ -1049,10 +1064,10 @@ let PANTALLAS = [
         el("p", {class:"leyenda"}, "Prueba al menos tres combinaciones."));
     } }),
 
-  () => pl({momento:3, boton:"Decidir otra vez", concepto:["No hay refugio fijo", "Lo que conserva tu poder de compra depende de comparar precios, tasas y tipo de cambio en el mismo período."], burbujas:[
+  () => pl({momento:3, boton:"Decidir otra vez", concepto:["No hay refugio fijo", "Lo que conserva tu poder adquisitivo depende de comparar precios, tasas y tipo de cambio en el mismo período."], burbujas:[
       "Cuando la tasa de cambio se queda quieta y los precios suben, ni el banco ni el dólar te protegen del todo.",
       "Cuando la tasa salta más que los precios, el dólar vuelve a ganar.",
-      "No hay un refugio fijo. Hay números que cambian, y se pueden leer."] }),
+      "No hay un refugio fijo. Hay variables que cambian, y se pueden analizar."] }),
 
   // ---- Momento 4 · Vuelve a decidir
   () => pl({auto:true, momento:4, burbujas:[
