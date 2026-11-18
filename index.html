@@ -1207,19 +1207,19 @@ function final(){
 /* ================= Lección F1: 100 dólares y un consejo (borrador 17 nov 2026) =================
    Oculta: solo se abre con ?leccion=2. Sin cifras que caduquen, sin activos concretos, sin rendimientos. */
 const F1_OPC = ["Hago lo mismo que mi amigo, para no quedarme atrás.",
-  "Le pregunto en qué los puso y decido después.",
-  "Los guardo en dólares hasta tener claro qué hacer.",
-  "Primero pienso para qué quiero ese dinero y cuándo lo voy a necesitar."];
+  "Le pregunto en qué instrumento los colocó y decido después.",
+  "Los mantengo en dólares, con liquidez, hasta tener claro qué hacer.",
+  "Primero defino para qué quiero ese dinero y cuándo lo voy a necesitar."];
 const F1_ASESORES = [
-  { nombre:"Marcos", consejo:"“Yo aparto mis 100 y no los toco por años. Los dejo trabajando y ni los miro. Me ha ido bien.”", mejor:"Luis",
+  { nombre:"Marcos", consejo:"“Yo aparto mis 100 y no los toco por años. Los dejo invertidos y ni los miro. Me ha ido bien.”", mejor:"Luis",
     bien:"Sí. Luis cobra fijo, no tiene urgencias y no va a necesitar ese dinero en cinco años. El consejo de Marcos encaja con su situación.",
-    mal:"Casi. Ese consejo le sirve más a Luis: no necesita el dinero en años y cobra fijo. Quien lo va a necesitar pronto o cobra irregular puede quedarse sin él justo cuando le hace falta." },
-  { nombre:"Carla", consejo:"“Yo tengo el dinero a la mano, donde pueda sacarlo el mismo día. Cuando lo he necesitado, ahí estaba.”", mejor:"Sofía",
-    bien:"Sí. Sofía se muda en cinco meses y necesita ese dinero. Para ella, poder sacarlo a tiempo pesa más que cualquier otra cosa.",
-    mal:"Casi. Ese consejo le sirve más a Sofía: se muda en cinco meses y necesita el dinero. Quien no lo va a tocar en años puede ser más paciente." },
-  { nombre:"Ramón", consejo:"“Cada vez que cobro aparto una parte. Armé un colchón para tres meses sin trabajo. Con eso duermo tranquilo.”", mejor:"Pedro",
-    bien:"Sí. Pedro cobra por trabajos: un mes le va muy bien y al siguiente casi nada. Un colchón le da calma y margen para decidir.",
-    mal:"Casi. Ese consejo le sirve más a Pedro: su ingreso sube y baja. Quien cobra fijo y sin urgencias tiene otra prioridad." }
+    mal:"Casi. Ese consejo le sirve más a Luis: no necesita el dinero en años y cobra fijo. Quien lo va a necesitar pronto o tiene ingresos irregulares puede quedarse sin liquidez justo cuando le hace falta." },
+  { nombre:"Carla", consejo:"“Yo mantengo el dinero con liquidez, donde pueda retirarlo el mismo día. Cuando lo he necesitado, ahí estaba.”", mejor:"Sofía",
+    bien:"Sí. Sofía se muda en cinco meses y necesita ese dinero. Para ella, la liquidez pesa más que cualquier otra cosa.",
+    mal:"Casi. Ese consejo le sirve más a Sofía: se muda en cinco meses y necesita el dinero. Quien no lo va a tocar en años puede tener un horizonte más largo." },
+  { nombre:"Ramón", consejo:"“Cada vez que cobro aparto una parte. Armé un fondo de emergencia para tres meses sin trabajo. Con eso duermo tranquilo.”", mejor:"Pedro",
+    bien:"Sí. Pedro cobra por trabajos: un mes le va muy bien y al siguiente casi nada. Un fondo de emergencia le da calma y margen para decidir.",
+    mal:"Casi. Ese consejo le sirve más a Pedro: su ingreso es variable. Quien cobra fijo y sin urgencias tiene otra prioridad." }
 ];
 const F1_PERSONAS = [
   ["Luis", "Cobra fijo cada mes, no tiene cargas y no va a necesitar ese dinero en 5 años."],
@@ -1229,55 +1229,55 @@ const F1_PERSONAS = [
 const PANTALLAS_F1 = [
   // ---- Momento 1 · Decide
   () => pl({auto:true, momento:1, burbujas:[
-      "Imagina que desde este mes te sobran 100 USD cada mes.",
-      "Un amigo cercano te cuenta que él ya pone su plata en algo y que le va muy bien. No te dice más.",
+      "Imagina que desde este mes tienes un excedente de 100 USD cada mes (lo que te sobra después de tus gastos).",
+      "Un amigo cercano te cuenta que él ya invierte su dinero en algo y que le va muy bien. No te dice más.",
       {texto:"¿Qué haces con tus 100 USD?", clase:"pregunta"}],
     construir:(z, listo) => elegir(z, F1_OPC, k => { L.datos.m1_opcion = LETRAS[k]; ganar("m1", 2, "decidiste sin miedo a equivocarte"); listo(); }) }),
 
   // ---- Momento 2 · Lo que pasó y la creencia
   () => pl({momento:2, auto:true, burbujas:[
       "Antes de seguir, predice.",
-      "Diez personas copian lo que hizo tu amigo. Solo una de las diez tiene su misma situación.",
+      "Diez personas copian lo que hizo tu amigo. Solo una de las diez tiene su misma situación financiera.",
       {texto:"¿Cuántas de las diez crees que terminan igual de bien que él?", clase:"pregunta"}],
-    construir:(z, listo) => elegir(z, ["Casi todas", "La mitad", "Pocas", "Solo la que tiene su situación"], k => {
+    construir:(z, listo) => elegir(z, ["Casi todas", "La mitad", "Pocas", "Solo la que tiene su misma situación"], k => {
       L.datos.m2_prediccion = ["casi_todas","mitad","pocas","misma_situacion"][k];
       ganar("m2", 1, "hiciste tu predicción");
       nota(z, k >= 2 ? "<b>Bien leído.</b> Veamos por qué." : "<b>Veamos por qué pasa esto.</b>");
       listo(); }) }),
 
-  () => pl({momento:2, concepto:["Sesgo del superviviente", "Oyes a quienes les fue bien. A quienes perdieron casi nunca los oyes, y eso hace que todo parezca más seguro de lo que es."], burbujas:[
-      "A cada quien le va distinto porque cada quien tiene un objetivo, un plazo y un margen para perder diferentes. Lo que le funcionó a tu amigo le funcionó a él, con lo suyo.",
-      "Copiar a alguien que ya lo hizo tiene sentido: cuando casi no hay información confiable, es la forma más rápida de decidir. Y en Venezuela muchas veces fue lo que tocaba.",
+  () => pl({momento:2, concepto:["Sesgo del superviviente", "Es un sesgo cognitivo: solo conoces a quienes les fue bien. A quienes perdieron casi nunca los oyes, y eso hace que una inversión parezca más segura de lo que es."], burbujas:[
+      "A cada quien le va distinto porque cada quien tiene un objetivo, un plazo y una tolerancia a la pérdida diferentes. Lo que le funcionó a tu amigo le funcionó a él, con su situación.",
+      "Copiar a alguien que ya lo hizo tiene sentido: cuando casi no hay información confiable, es el atajo más rápido para decidir. Y en Venezuela muchas veces fue lo que tocaba.",
       "El problema es que solo te cuentan lo que salió bien."],
-    construir:(z, listo) => { z.append(el("div", {class:"tarjeta"}, el("p", {}, "Ninguna decisión de seguir a alguien es tonta. La pregunta es si su situación se parece a la tuya."))); listo(); } }),
+    construir:(z, listo) => { z.append(el("div", {class:"tarjeta"}, el("p", {}, "Seguir a alguien tiene su lógica. La pregunta es si su situación se parece a la tuya."))); listo(); } }),
 
   // ---- Momento 3 · La teoría
-  () => pl({momento:3, concepto:["Tu punto de partida", "Para qué es el dinero, cuándo lo vas a necesitar y cuánto puedes perder sin que se te caiga la vida."], burbujas:[
-      "Tres cosas cambian de una persona a otra, y deciden si un consejo te sirve:",
-      "Para qué es el dinero. Cuándo lo vas a necesitar. Y cuánto puedes perder sin que se te caiga la vida."],
+  () => pl({momento:3, concepto:["Tu punto de partida", "Tu objetivo, tu horizonte de tiempo y tu tolerancia a la pérdida: para qué es el dinero, cuándo lo vas a necesitar y cuánto puedes perder sin que se te desordene la vida."], burbujas:[
+      "Tres variables cambian de una persona a otra, y deciden si un consejo te sirve:",
+      "Tu objetivo: para qué es el dinero. Tu horizonte: cuándo lo vas a necesitar. Y tu tolerancia a la pérdida: cuánto puedes perder sin que se te desordene la vida."],
     construir:(z, listo) => { listo(); } }),
 
-  () => pl({momento:3, burbujas:["Probemos con el plazo.", "Mueve la barra: ¿cuándo vas a necesitar este dinero?"],
+  () => pl({momento:3, burbujas:["Probemos con el horizonte de tiempo (el plazo).", "Mueve la barra: ¿cuándo vas a necesitar este dinero?"],
     construir:(z, listo) => {
       const texto = el("div", {class:"tarjeta"}, el("p", {}));
       const poner = m => {
-        texto.firstChild.textContent = m <= 3 ? "Lo necesitas muy pronto. Lo que más importa es poder sacarlo cuando lo necesites, sin perder."
-          : m <= 12 ? "Lo necesitas en meses. Prefieres tenerlo a la mano y que no sea una sorpresa."
-          : m <= 36 ? "Tienes algo de tiempo. Puedes pensar en qué tanto altibajo aguantas."
-          : "Tienes mucho tiempo. Puedes aguantar altibajos, porque no lo necesitas ya.";
+        texto.firstChild.textContent = m <= 3 ? "Lo necesitas muy pronto. Lo que más importa es la liquidez: poder retirarlo cuando lo necesites, sin perder valor."
+          : m <= 12 ? "Lo necesitas en meses. Conviene priorizar la liquidez y evitar sorpresas."
+          : m <= 36 ? "Tienes algo de tiempo. Puedes pensar en cuánta volatilidad (altibajos en el valor) toleras."
+          : "Tienes un horizonte largo. Puedes tolerar más volatilidad, porque no lo necesitas ya.";
       };
       let movido = false;
       z.append(slider("¿Cuándo lo vas a necesitar?", 1, 60, 1, 6, v => v < 12 ? `${v} ${v === 1 ? "mes" : "meses"}` : `${(v/12).toLocaleString("es-VE", {maximumFractionDigits:1})} años`, v => {
         poner(v); if (!movido) { movido = true; ganar("m3a", 1, "probaste cómo cambia el plazo"); listo(); } }));
-      poner(6); z.append(texto, el("p", {class:"leyenda"}, "El plazo cambia lo que te conviene, aunque el monto sea el mismo."));
+      poner(6); z.append(texto, el("p", {class:"leyenda"}, "El horizonte cambia lo que te conviene, aunque el monto sea el mismo."));
     } }),
 
-  () => pl({momento:3, concepto:["Riesgo", "La posibilidad de que el resultado sea distinto a lo que esperabas, para bien o para mal. No es solo perder todo: también es no poder sacar el dinero a tiempo."], burbujas:[
+  () => pl({momento:3, concepto:["Riesgo", "La posibilidad de que el resultado sea distinto a lo que esperabas, para bien o para mal. No es solo perder todo: también es falta de liquidez (no poder retirar el dinero a tiempo)."], burbujas:[
       "Cuando se habla de riesgo, mucha gente piensa solo en perder todo.",
-      "Pero también es riesgo no poder sacar el dinero cuando lo necesitas, o que te rinda menos de lo que esperabas."],
+      "Pero también es riesgo no poder retirar el dinero cuando lo necesitas, o que su rendimiento (la ganancia que genera) sea menor de lo que esperabas."],
     construir:(z, listo) => {
       const btn = el("button", {class:"vermas", type:"button"}, "Ver un ejemplo");
-      const extra = el("div", {class:"oculto"}, el("div", {class:"burbuja"}, "Si necesitas el dinero en dos meses y lo dejaste donde no puedes sacarlo, el problema no es que se pierda: es que no está cuando lo necesitas."));
+      const extra = el("div", {class:"oculto"}, el("div", {class:"burbuja"}, "Si necesitas el dinero en dos meses y lo colocaste donde no puedes retirarlo, el problema no es que se pierda: es la falta de liquidez, que no está cuando lo necesitas."));
       btn.addEventListener("click", () => { extra.classList.remove("oculto"); btn.remove(); ganar("m3c", 1, "exploraste qué es el riesgo"); });
       z.append(btn, extra); listo(); } }),
 
@@ -1313,20 +1313,20 @@ const PANTALLAS_F1 = [
       mostrar(); } }),
 
   () => pl({momento:3, auto:true, burbujas:["Un buen consejo no sale de que le haya ido bien a alguien.", "Sale de que su situación se parezca a la tuya."],
-    construir:(z, listo) => { z.append(el("div", {class:"tarjeta"}, el("p", {}, "Los tres consejos eran buenos. Cada uno le sirve a quien tiene una situación parecida a la suya."))); listo(); } }),
+    construir:(z, listo) => { z.append(el("div", {class:"tarjeta"}, el("p", {}, "Los tres consejos eran buenos. Cada uno le sirve a quien tiene una situación financiera parecida a la suya."))); listo(); } }),
 
   // ---- Momento 4 · Vuelve a decidir
   () => pl({momento:4, auto:true, burbujas:[
       "Mismo amigo, mismo consejo, mismos 100 USD al mes.",
-      "Pero ahora sabes algo más: en 6 meses vas a necesitar ese dinero para algo que no puedes mover. Puede ser una cirugía, un viaje de trabajo o un pago importante.",
+      "Pero ahora sabes algo más: en 6 meses vas a necesitar ese dinero para un gasto que no puedes postergar. Puede ser una cirugía, un viaje de trabajo o un pago importante.",
       {texto:"¿Qué haces con tus 100 USD?", clase:"pregunta"}],
     construir:(z, listo) => elegir(z, F1_OPC, k => {
       L.datos.m4_opcion = LETRAS[k];
       const t = [
-        "Si tu amigo no necesita el dinero pronto y tú sí, puedes no tenerlo cuando lo necesites.",
-        "Preguntar es un buen primer paso. Falta lo más importante: ponerlo frente a tu plazo de 6 meses.",
-        "Sirve para tenerlo a la mano. Recuerda lo que viste en la lección 1: el dólar también pierde poder de compra con el tiempo.",
-        "Es lo que más cambia el resultado: partes de tu plazo, no de lo que hizo otra persona."][k];
+        "Si tu amigo no necesita el dinero pronto y tú sí, puedes carecer de liquidez cuando lo necesites.",
+        "Preguntar es un buen primer paso. Falta lo más importante: contrastarlo con tu horizonte de 6 meses.",
+        "Te da liquidez. Recuerda lo que viste en la lección 1: el dólar también pierde poder adquisitivo con el tiempo.",
+        "Es lo que más cambia el resultado: partes de tu horizonte, no de lo que hizo otra persona."][k];
       nota(z, `<b>Lo que pasa:</b> ${t}`);
       listo(); }) }),
 
@@ -1334,11 +1334,11 @@ const PANTALLAS_F1 = [
     construir:(z, listo) => elegir(z, [
         "En lo que hizo mi amigo",
         "En cuándo voy a necesitar el dinero",
-        "En cuánto puedo perder sin que se me complique",
+        "En cuánto puedo perder sin que se me complique (mi tolerancia a la pérdida)",
         "En no quedarme atrás"], k => {
       L.datos.m4_razon = k;
-      if (k === 1 || k === 2) { ganar("m4", 3, "decidiste con tu situación, no con la de otro"); nota(z, "<b>Así se decide con criterio:</b> miraste tu plazo y tu margen."); }
-      else { ganar("m4", 1, "volviste a decidir"); nota(z, "<b>Es una razón humana,</b> pero la próxima vez mira primero tu plazo y cuánto puedes perder."); }
+      if (k === 1 || k === 2) { ganar("m4", 3, "decidiste con tu situación, no con la de otro"); nota(z, "<b>Así se decide con criterio:</b> miraste tu horizonte y tu tolerancia a la pérdida."); }
+      else { ganar("m4", 1, "volviste a decidir"); nota(z, "<b>Es una razón humana,</b> pero la próxima vez mira primero tu horizonte y cuánto puedes perder."); }
       listo(); }) }),
 
   // ---- Momento 5 · Llévalo a tu vida
@@ -1347,7 +1347,7 @@ const PANTALLAS_F1 = [
       "¿Para qué quiere ese dinero la persona que me aconseja? ¿Cuándo lo necesita? ¿Qué le pasa si le sale mal, y qué me pasaría a mí?",
       "Y una más: ¿quién gana si yo lo hago?"],
     construir:(z, listo) => {
-      const acciones = ["Anotar para qué y cuándo voy a necesitar mi próximo dinero de sobra",
+      const acciones = ["Anotar para qué y cuándo voy a necesitar mi próximo excedente",
         "Preguntarle a alguien que me aconsejó qué le funcionó y por qué",
         "Hacerme las tres preguntas con un consejo que ya recibí"];
       const paso3 = el("div", {}); 
@@ -1374,7 +1374,7 @@ function final2(){
   );
   escribir(guia, [
     {texto:"Cuando alguien cercano te dice “a mí me funcionó”, es natural querer hacer lo mismo."},
-    {texto:"Hoy vas a practicar cómo saber si ese consejo te sirve a ti. Equivocarte no te quita nada."}
+    {texto:"Hoy vas a practicar cómo evaluar si ese consejo te sirve a ti. Equivocarte aquí no te quita nada."}
   ], () => empezar.disabled = false);
 }
 
