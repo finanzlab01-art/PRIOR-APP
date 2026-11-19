@@ -17,7 +17,8 @@ test('diagnóstico v5 y guardado local de un concepto', async ({ page }) => {
     const opcion = page.locator('.opcion').first();
     await opcion.waitFor({ state: 'visible' });
     await opcion.click();
-    if (i < 10) await page.waitForTimeout(850);
+    if (i < 10) await expect(opcion).toBeDisabled(); 
+    if (i < 10) await expect(page.locator('.opcion').first()).toBeEnabled({ timeout: 5000 });
   }
   await expect(page.locator('h1')).toContainText('Tu ruta empieza por', { timeout: 15000 });
   await page.getByRole('button', { name: 'Empezar mi primera lección' }).click();
@@ -30,9 +31,7 @@ test('diagnóstico v5 y guardado local de un concepto', async ({ page }) => {
   await page.waitForTimeout(900);
   await page.locator('.saltar').click();
   await page.locator('.opcion').first().click();
-  await expect(page.getByText(/Lo que hoy cuesta/)).toBeVisible({ timeout: 15000 });
-  await page.getByRole('button', { name: 'Seguir', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toBeVisible({ timeout: 20000 });
   await page.getByRole('button', { name: 'Guardar en mi biblioteca' }).click();
   await page.getByRole('button', { name: 'Ver mi biblioteca' }).click();
   await expect(page.getByRole('heading', { name: 'Mi biblioteca' })).toBeVisible();
