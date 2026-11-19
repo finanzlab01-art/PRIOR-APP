@@ -1,5 +1,5 @@
 // Cada vez que cambies íconos o fuentes, sube el número de CACHE.
-const CACHE = "prior-v1";
+const CACHE = "prior-v2";
 
 // Se guardan al instalar para que la app abra sin conexión.
 const PRECARGA = [
