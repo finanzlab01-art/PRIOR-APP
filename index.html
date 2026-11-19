@@ -501,6 +501,7 @@ const CLAVE_BIBLIOTECA_USUARIO = "prior_biblioteca_usuario_";
 const CLAVE_BIBLIOTECA_BORRADOS = "prior_biblioteca_borrados_";
 let estadoSyncBiblioteca = "local";
 let sincronizandoBiblioteca = false;
+let repetirSyncBiblioteca = false;
 const claveBibliotecaUsuario = id => CLAVE_BIBLIOTECA_USUARIO + id;
 const claveBorradosUsuario = id => CLAVE_BIBLIOTECA_BORRADOS + id;
 const claveBibliotecaActual = () => usuario ? claveBibliotecaUsuario(usuario.id) : CLAVE_BIBLIOTECA;
@@ -517,7 +518,10 @@ function guardarConcepto(concepto){
   const item={id,nombre:concepto[0],definicion:concepto[1],guardado:anterior?.guardado||new Date().toISOString()};
   const nuevos=[item,...items.filter(x=>(x.id||idConcepto(x))!==id)];
   const ok=guardarBiblioteca(nuevos);
-  if(ok && usuario) sincronizarBiblioteca(usuario);
+  if(ok && usuario){
+    guardarBorrados(usuario.id,leerBorrados(usuario.id).filter(x=>x!==id));
+    sincronizarBiblioteca(usuario);
+  }
   return ok;
 }
 function leerBorrados(id){return leerListaBiblioteca(claveBorradosUsuario(id));}
@@ -533,7 +537,8 @@ async function quitarConcepto(id){
   biblioteca();
 }
 async function sincronizarBiblioteca(user=usuario){
-  if(!sb || !user || sincronizandoBiblioteca)return false;
+  if(!sb || !user)return false;
+  if(sincronizandoBiblioteca){repetirSyncBiblioteca=true;return false;}
   sincronizandoBiblioteca=true; estadoSyncBiblioteca="sincronizando";
   try{
     const claveUsuario=claveBibliotecaUsuario(user.id);
@@ -575,7 +580,13 @@ async function sincronizarBiblioteca(user=usuario){
     console.error("Sincronización de biblioteca pendiente:",error.message||error);
     estadoSyncBiblioteca="pendiente";
     return false;
-  }finally{sincronizandoBiblioteca=false;}
+  }finally{
+    sincronizandoBiblioteca=false;
+    if(repetirSyncBiblioteca){
+      repetirSyncBiblioteca=false;
+      if(usuario) setTimeout(()=>sincronizarBiblioteca(usuario),0);
+    }
+  }
 }
 function biblioteca(){
   registrarPaso("biblioteca");const items=leerBiblioteca();const lista=el("div",{class:"biblioteca-lista"});
