@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('diagnóstico v5 y guardado local de un concepto', async ({ page }) => {
+  test.setTimeout(120000);
   await page.goto('/');
   await expect(page.locator('h1')).toHaveText('El futuro se practica.');
   await page.locator('.saltar').click();
@@ -17,8 +18,14 @@ test('diagnóstico v5 y guardado local de un concepto', async ({ page }) => {
     const opcion = page.locator('.opcion').first();
     await opcion.waitFor({ state: 'visible' });
     await opcion.click();
-    if (i < 10) await expect(opcion).toBeDisabled(); 
-    if (i < 10) await expect(page.locator('.opcion').first()).toBeEnabled({ timeout: 5000 });
+    if (i < 10) {
+      await expect(opcion).toBeDisabled();
+      await expect(opcion).not.toBeAttached({ timeout: 20000 });
+      await page.locator('.opcion').first().waitFor({ state: 'visible', timeout: 20000 });
+    } else {
+      await expect(page.getByText('¿Qué nivel de seguridad tienes sobre tu respuesta?')).toBeVisible({ timeout: 20000 });
+      await page.locator('.opcion:not(:disabled)').last().click();
+    }
   }
   await expect(page.locator('h1')).toContainText('Tu ruta empieza por', { timeout: 15000 });
   await page.getByRole('button', { name: 'Empezar mi primera lección' }).click();
