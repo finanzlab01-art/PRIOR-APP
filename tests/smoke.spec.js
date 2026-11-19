@@ -28,8 +28,7 @@ test('diagnóstico v5 y guardado local de un concepto', async ({ page }) => {
   // Primera decisión y predicción; se llega al concepto de la segunda pantalla.
   await page.locator('.saltar').click();
   await page.locator('.opcion').first().click();
-  await page.waitForTimeout(900);
-  await page.locator('.saltar').click();
+  await expect(page.getByText(/En tres meses/)).toBeVisible({ timeout: 20000 });
   await page.locator('.opcion').first().click();
   await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toBeVisible({ timeout: 20000 });
   await page.getByRole('button', { name: 'Guardar en mi biblioteca' }).click();
