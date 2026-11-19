@@ -497,14 +497,103 @@ const estado = { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:
 const app = document.getElementById("app");
 const reducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const CLAVE_BIBLIOTECA = "prior_biblioteca_v1";
-function leerBiblioteca(){try{const v=JSON.parse(localStorage.getItem(CLAVE_BIBLIOTECA)||"[]");return Array.isArray(v)?v:[];}catch{return [];}}
-function guardarBiblioteca(items){try{localStorage.setItem(CLAVE_BIBLIOTECA,JSON.stringify(items));return true;}catch{return false;}}
-function guardarConcepto(concepto){const items=leerBiblioteca();if(!items.some(x=>x.nombre===concepto[0]))items.unshift({nombre:concepto[0],definicion:concepto[1],guardado:new Date().toISOString()});return guardarBiblioteca(items);}
+const CLAVE_BIBLIOTECA_USUARIO = "prior_biblioteca_usuario_";
+const CLAVE_BIBLIOTECA_BORRADOS = "prior_biblioteca_borrados_";
+let estadoSyncBiblioteca = "local";
+let sincronizandoBiblioteca = false;
+const claveBibliotecaUsuario = id => CLAVE_BIBLIOTECA_USUARIO + id;
+const claveBorradosUsuario = id => CLAVE_BIBLIOTECA_BORRADOS + id;
+const claveBibliotecaActual = () => usuario ? claveBibliotecaUsuario(usuario.id) : CLAVE_BIBLIOTECA;
+const idConcepto = c => String(c.id || c[2] || c.nombre || c[0] || "")
+  .normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()
+  .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+function leerListaBiblioteca(clave){try{const v=JSON.parse(localStorage.getItem(clave)||"[]");return Array.isArray(v)?v:[];}catch{return [];}}
+function leerBiblioteca(){return leerListaBiblioteca(claveBibliotecaActual());}
+function guardarBiblioteca(items){try{localStorage.setItem(claveBibliotecaActual(),JSON.stringify(items));return true;}catch{return false;}}
+function guardarConcepto(concepto){
+  const items=leerBiblioteca(), id=idConcepto(concepto);
+  if(!id)return false;
+  const anterior=items.find(x=>(x.id||idConcepto(x))===id);
+  const item={id,nombre:concepto[0],definicion:concepto[1],guardado:anterior?.guardado||new Date().toISOString()};
+  const nuevos=[item,...items.filter(x=>(x.id||idConcepto(x))!==id)];
+  const ok=guardarBiblioteca(nuevos);
+  if(ok && usuario) sincronizarBiblioteca(usuario);
+  return ok;
+}
+function leerBorrados(id){return leerListaBiblioteca(claveBorradosUsuario(id));}
+function guardarBorrados(id,items){try{localStorage.setItem(claveBorradosUsuario(id),JSON.stringify(items));return true;}catch{return false;}}
+async function quitarConcepto(id){
+  const items=leerBiblioteca().filter(x=>(x.id||idConcepto(x))!==id);
+  if(!guardarBiblioteca(items)){estadoSyncBiblioteca="pendiente";biblioteca();return;}
+  if(usuario){
+    const borrados=[...new Set([...leerBorrados(usuario.id),id])];
+    guardarBorrados(usuario.id,borrados);
+    await sincronizarBiblioteca(usuario);
+  }
+  biblioteca();
+}
+async function sincronizarBiblioteca(user=usuario){
+  if(!sb || !user || sincronizandoBiblioteca)return false;
+  sincronizandoBiblioteca=true; estadoSyncBiblioteca="sincronizando";
+  try{
+    const claveUsuario=claveBibliotecaUsuario(user.id);
+    const locales=[...leerListaBiblioteca(CLAVE_BIBLIOTECA),...leerListaBiblioteca(claveUsuario)];
+    const {data:remotos,error:lecturaError}=await sb.from("biblioteca_conceptos")
+      .select("concepto_id,nombre,definicion,creado_en,actualizado_en").eq("user_id",user.id);
+    if(lecturaError)throw lecturaError;
+    const borrados=leerBorrados(user.id);
+    if(borrados.length){
+      const {error}=await sb.from("biblioteca_conceptos").delete()
+        .eq("user_id",user.id).in("concepto_id",borrados);
+      if(error)throw error;
+    }
+    const mapa=new Map((remotos||[]).filter(x=>!borrados.includes(x.concepto_id))
+      .map(x=>[x.concepto_id,{id:x.concepto_id,nombre:x.nombre,definicion:x.definicion,guardado:x.actualizado_en||x.creado_en}]));
+    locales.forEach(x=>{
+      const id=x.id||idConcepto(x); if(!id||borrados.includes(id))return;
+      const previo=mapa.get(id);
+      if(!previo || !previo.guardado || !x.guardado || new Date(x.guardado)>=new Date(previo.guardado))
+        mapa.set(id,{id,nombre:x.nombre,definicion:x.definicion,guardado:x.guardado||new Date().toISOString()});
+    });
+    const unidos=[...mapa.values()];
+    if(unidos.length){
+      const filas=unidos.map(x=>({user_id:user.id,concepto_id:x.id,nombre:x.nombre,definicion:x.definicion,actualizado_en:x.guardado||new Date().toISOString()}));
+      const {error}=await sb.from("biblioteca_conceptos").upsert(filas,{onConflict:"user_id,concepto_id"});
+      if(error)throw error;
+    }
+    const {data:finales,error:finalError}=await sb.from("biblioteca_conceptos")
+      .select("concepto_id,nombre,definicion,creado_en,actualizado_en").eq("user_id",user.id);
+    if(finalError)throw finalError;
+    localStorage.setItem(claveUsuario,JSON.stringify((finales||[]).map(x=>({
+      id:x.concepto_id,nombre:x.nombre,definicion:x.definicion,guardado:x.actualizado_en||x.creado_en
+    }))));
+    localStorage.removeItem(CLAVE_BIBLIOTECA);
+    guardarBorrados(user.id,[]);
+    estadoSyncBiblioteca="sincronizada";
+    return true;
+  }catch(error){
+    console.error("Sincronización de biblioteca pendiente:",error.message||error);
+    estadoSyncBiblioteca="pendiente";
+    return false;
+  }finally{sincronizandoBiblioteca=false;}
+}
 function biblioteca(){
   registrarPaso("biblioteca");const items=leerBiblioteca();const lista=el("div",{class:"biblioteca-lista"});
   if(!items.length)lista.append(el("div",{class:"biblioteca-vacia"},"Todavía no has guardado conceptos. Durante una lección, toca «Guardar en mi biblioteca» para conservar una idea."));
-  else items.forEach((item,i)=>{const tarjeta=el("article",{class:"biblioteca-item"});tarjeta.append(el("h2",{},item.nombre),el("p",{},item.definicion),el("p",{class:"meta"},"Guardado en este dispositivo"),el("button",{class:"btn texto",type:"button",onclick:()=>{const a=leerBiblioteca();a.splice(i,1);guardarBiblioteca(a);biblioteca();}},"Quitar de mi biblioteca"));lista.append(tarjeta);});
-  pantalla(el("div",{class:"barra-app"},el("span",{class:"marca"},"PRIOR"),el("button",{class:"btn-biblioteca",type:"button",onclick:()=>PANTALLAS[L.paso]()},"Volver")),el("h1",{class:"titulo"},"Mi biblioteca"),el("p",{class:"sublema"},"Conceptos guardados en este dispositivo. Puedes usarla sin crear una cuenta."),lista);
+  else items.forEach(item=>{
+    const tarjeta=el("article",{class:"biblioteca-item"});
+    tarjeta.append(el("h2",{},item.nombre),el("p",{},item.definicion),
+      el("p",{class:"meta"},usuario?"Guardado en tu cuenta":"Guardado en este dispositivo"),
+      el("button",{class:"btn texto",type:"button",onclick:()=>quitarConcepto(item.id||idConcepto(item))},"Quitar de mi biblioteca"));
+    lista.append(tarjeta);
+  });
+  const estado=el("p",{class:"aviso-demo",role:"status"},usuario?
+    (estadoSyncBiblioteca==="sincronizada"?"Tu biblioteca está sincronizada con tu cuenta.":estadoSyncBiblioteca==="pendiente"?"Tus cambios siguen guardados en este dispositivo; falta sincronizarlos.":estadoSyncBiblioteca==="sincronizando"?"Sincronizando tu biblioteca…":"Biblioteca guardada en tu cuenta."):"Tu biblioteca está guardada en este dispositivo.");
+  const reintentar=usuario&&estadoSyncBiblioteca==="pendiente"?el("button",{class:"btn secundario",type:"button",onclick:async()=>{await sincronizarBiblioteca(usuario);biblioteca();}},"Reintentar sincronización"):null;
+  pantalla(el("div",{class:"barra-app"},el("span",{class:"marca"},"PRIOR"),el("button",{class:"btn-biblioteca",type:"button",onclick:()=>PANTALLAS[L.paso]()},"Volver")),
+    el("h1",{class:"titulo"},"Mi biblioteca"),
+    el("p",{class:"sublema"},usuario?"Conceptos guardados en tu cuenta y disponibles al iniciar sesión.":"Conceptos guardados en este dispositivo. Puedes usarla sin crear una cuenta."),
+    estado,reintentar,lista);
 }
 
 /* ---------- Utilidades ---------- */
@@ -518,6 +607,12 @@ const el = (tag, attrs={}, ...hijos) => {
   for (const h of hijos) if (h != null) n.append(h);
   return n;
 };
+
+if(sb) sb.auth.onAuthStateChange((evento,sesion)=>{
+  usuario=sesion?.user||null;
+  if(usuario) Promise.resolve().then(()=>sincronizarBiblioteca(usuario));
+  else estadoSyncBiblioteca="local";
+});
 
 // Burbujas que aparecen una a una como mensajes; un toque las muestra todas.
 function escribir(contenedor, textos, alTerminar){
@@ -841,7 +936,7 @@ const OPC_LECCION = ["Los coloco a plazo. 51% es más de lo que rinde casi cualq
   "Los dejo en una cuenta a la vista. Paga 15% anual y tengo liquidez: puedo disponer del dinero cuando lo necesite.",
   "Los cambio hoy a dólares y los guardo hasta que los necesite.",
   "Compro hoy cosas que sé que voy a usar en esos tres meses."];
-const OPC_CORTAS = ["Plazo al 51%", "Cuenta al 15%", "Dólares", "Comprar hoy lo que usaré"];
+const OPC_CORTAS = ["Plazo al 51%", "Cuenta a la vista al 15%", "Dólares", "Comprar hoy lo que usaré"];
 // Pregunta de predicción según lo que eligió la persona en el momento 1.
 const PREDICCION = [
   ["El banco te paga 51% al año. En octubre los precios subieron 6,2% en un solo mes.",
@@ -909,7 +1004,7 @@ function pl({momento, burbujas, construir, boton="Seguir", saltable=false, conce
       const caja=el("div",{class:"concepto"},el("small",{},"La idea"),el("h3",{},concepto[0]),el("p",{},concepto[1]));
       const acciones=el("div",{class:"concepto-acciones"});
       const guardar=el("button",{type:"button"},"Guardar en mi biblioteca");
-      guardar.addEventListener("click",()=>{const ok=guardarConcepto(concepto);guardar.textContent=ok?"Guardado ✓":"No se pudo guardar";guardar.disabled=ok;});
+      guardar.addEventListener("click",()=>{const ok=guardarConcepto(concepto);guardar.textContent=ok?(usuario?"Guardado ✓":"Guardado ✓"):"No se pudo guardar";guardar.disabled=ok;});
       const consultar=el("button",{type:"button"},"Ver mi biblioteca");consultar.addEventListener("click",biblioteca);
       acciones.append(guardar,consultar);caja.append(acciones);zona.append(caja);
     }, 10);
@@ -1070,9 +1165,9 @@ const PANTALLAS = [
       let movido = false;
       z.append(slider("Inflación anual", 0, 600, 1, Math.round(DATOS.inflAnual*100), v => `${v}%`, v => { calc(v); if (!movido) { movido = true; ganar("m3c", 1, "probaste la tasa real"); listo(); } }));
       z.append(cifra, el("p", {class:"formula"}, "Tasa real = (1 + tasa nominal) / (1 + inflación) − 1. Compara períodos equivalentes."));
-      z.append(el("div", {class:"tarjeta"}, el("p", {}, "Cuando un país mantiene a propósito tasas por debajo de la inflación y limita el crédito, los economistas lo llaman represión financiera.")));
+      z.append(el("div", {class:"tarjeta"}, el("p", {}, "Cuando las reglas mantienen los rendimientos por debajo de la inflación y restringen el crédito, los economistas lo llaman represión financiera.")));
     },
-    concepto:["Tasa real", "Lo que de verdad ganas: lo que te pagan descontando cuánto subieron los precios."] }),
+    concepto:["Tasa real", "Rendimiento después de descontar la inflación; indica si tu dinero gana o pierde poder adquisitivo."] }),
 
   () => pl({auto:true, momento:3, burbujas:[
       "Si casi no pueden prestar y pagan intereses cada vez más altos, ¿de qué viven los bancos?",
