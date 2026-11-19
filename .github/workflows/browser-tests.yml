@@ -2,6 +2,8 @@ name: PRIOR browser smoke tests
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [prior-integracion-completa]
   workflow_dispatch:
 permissions:
   contents: read
