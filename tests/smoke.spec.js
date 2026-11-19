@@ -37,6 +37,8 @@ test('diagnóstico v5 y guardado local de un concepto', async ({ page }) => {
   await page.locator('.opcion').first().click();
   await expect(page.getByText(/En tres meses/)).toBeVisible({ timeout: 20000 });
   await page.locator('.opcion').first().click();
+  await expect(page.getByText(/Lo que hoy cuesta/)).toBeVisible({ timeout: 20000 });
+  await page.getByRole('button', { name: 'Seguir', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toBeVisible({ timeout: 20000 });
   await page.getByRole('button', { name: 'Guardar en mi biblioteca' }).click();
   await page.getByRole('button', { name: 'Ver mi biblioteca' }).click();
