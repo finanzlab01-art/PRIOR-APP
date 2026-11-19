@@ -13,16 +13,18 @@ create table if not exists public.biblioteca_conceptos (
 create index if not exists biblioteca_conceptos_user_actualizado_idx
   on public.biblioteca_conceptos (user_id, actualizado_en desc);
 alter table public.biblioteca_conceptos enable row level security;
+revoke all on table public.biblioteca_conceptos from anon, public;
+grant select, insert, update, delete on table public.biblioteca_conceptos to authenticated;
 drop policy if exists "cada quien ve su biblioteca" on public.biblioteca_conceptos;
 create policy "cada quien ve su biblioteca" on public.biblioteca_conceptos
-  for select to authenticated using (auth.uid() = user_id);
+  for select to authenticated using ((select auth.uid()) = user_id);
 drop policy if exists "cada quien guarda en su biblioteca" on public.biblioteca_conceptos;
 create policy "cada quien guarda en su biblioteca" on public.biblioteca_conceptos
-  for insert to authenticated with check (auth.uid() = user_id);
+  for insert to authenticated with check ((select auth.uid()) = user_id);
 drop policy if exists "cada quien actualiza su biblioteca" on public.biblioteca_conceptos;
 create policy "cada quien actualiza su biblioteca" on public.biblioteca_conceptos
-  for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 drop policy if exists "cada quien quita de su biblioteca" on public.biblioteca_conceptos;
 create policy "cada quien quita de su biblioteca" on public.biblioteca_conceptos
-  for delete to authenticated using (auth.uid() = user_id);
+  for delete to authenticated using ((select auth.uid()) = user_id);
 grant select, insert, update, delete on public.biblioteca_conceptos to authenticated;
