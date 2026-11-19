@@ -1128,7 +1128,7 @@ const PANTALLAS = [
         z.append(btn, extra);
         z.append(el("div", {class:"tarjeta"}, el("p", {}, "Las dos tuvieron sentido en otro momento. La pregunta es qué dicen los datos hoy.")));
         listo(); },
-      concepto:["Ilusión monetaria", "Mirar la cifra (51%, 100 dólares) y no lo que esa cifra compra."] });
+      concepto:["Ilusión monetaria", "Mirar la cifra (51%, 100 dólares) y no lo que esa cifra compra.", "ilusion-monetaria"] });
   },
 
   // ---- Momento 3a · El problema
@@ -1140,7 +1140,7 @@ const PANTALLAS = [
       ganar("m3a", 1, "respondiste antes de ver la teoría");
       nota(z, k === 0 ? "<b>Así es:</b> de los depósitos de gente como tú." : "<b>En realidad,</b> sale sobre todo de los depósitos de gente como tú.");
       listo(); }),
-    concepto:["Intermediación financiera", "El banco recibe depósitos, los presta y vive de la diferencia entre lo que cobra y lo que paga."] }),
+    concepto:["Intermediación financiera", "El banco recibe depósitos, los presta y vive de la diferencia entre lo que cobra y lo que paga.", "intermediacion-financiera"] }),
 
   () => pl({momento:3, burbujas:[
       "En Venezuela, el BCV obliga a los bancos a dejar inmovilizada en el propio BCV una parte enorme de lo que depositas: el encaje legal.",
@@ -1159,9 +1159,9 @@ const PANTALLAS = [
       const btn = el("button", {class:"vermas", type:"button", onclick:() => { extra.classList.remove("oculto"); btn.remove(); }}, "Ver más: ¿y en otros países?");
       z.append(btn, extra);
     },
-    concepto:["Encaje legal", "La parte de tus depósitos que el banco debe dejar inmovilizada en el BCV y no puede prestar."] }),
+    concepto:["Encaje legal", "La parte de tus depósitos que el banco debe dejar inmovilizada en el BCV y no puede prestar.", "encaje-legal"] }),
 
-  () => pl({momento:3, concepto:["Política monetaria contractiva", "Frenar la cantidad de bolívares que circulan para contener la inflación y el dólar. Su costo: casi no hay crédito."], burbujas:[
+  () => pl({momento:3, concepto:["Política monetaria contractiva", "Frenar la cantidad de bolívares que circulan para contener la inflación y el dólar. Su costo: casi no hay crédito.", "politica-monetaria-contractiva"], burbujas:[
       "¿Por qué el BCV hace esto? Para frenar la inflación y la subida del dólar. Si los bancos prestan menos, circulan menos bolívares, y hay menos bolívares buscando comprar dólares.",
       "Es política monetaria contractiva. Tiene un costo: casi no hay crédito. El crédito bancario no llega al 4% del tamaño de la economía; en Colombia es cerca de 50%."] }),
 
@@ -1178,7 +1178,7 @@ const PANTALLAS = [
       z.append(cifra, el("p", {class:"formula"}, "Tasa real = (1 + tasa nominal) / (1 + inflación) − 1. Compara períodos equivalentes."));
       z.append(el("div", {class:"tarjeta"}, el("p", {}, "Cuando las reglas mantienen los rendimientos por debajo de la inflación y restringen el crédito, los economistas lo llaman represión financiera.")));
     },
-    concepto:["Tasa real", "Rendimiento después de descontar la inflación; indica si tu dinero gana o pierde poder adquisitivo."] }),
+    concepto:["Tasa real", "Rendimiento después de descontar la inflación; indica si tu dinero gana o pierde poder adquisitivo.", "tasa-real"] }),
 
   () => pl({auto:true, momento:3, burbujas:[
       "Si casi no pueden prestar y pagan intereses cada vez más altos, ¿de qué viven los bancos?",
@@ -1189,7 +1189,7 @@ const PANTALLAS = [
       ganar("m3d", 1, "razonaste quién carga el riesgo");
       nota(z, k === 0 ? "<b>Exacto:</b> el riesgo lo cargas tú, no el banco." : "<b>En realidad lo cargas tú:</b> si el bolívar cae, tu deuda sube y el banco no pierde.");
       listo(); }),
-    concepto:["Crédito indexado (UVC)", "Una deuda que se ajusta con el tipo de cambio: si el bolívar cae, lo que debes sube."] }),
+    concepto:["Crédito indexado (UVC)", "Una deuda que se ajusta con el tipo de cambio: si el bolívar cae, lo que debes sube.", "credito-indexado-uvc"] }),
 
   // ---- Momento 3b · El impacto
   () => pl({auto:true, momento:3, burbujas:["Esto produce cuatro efectos sobre tu dinero que quizás vives sin notarlos.", {texto:"¿Cuál vives más?", clase:"pregunta"}],
@@ -1205,7 +1205,7 @@ const PANTALLAS = [
         nota(z, `<b>${efectos[k][0]}:</b> ${efectos[k][1]}`);
         listo(); });
     },
-    concepto:["Descalce de monedas", "Ganar en una moneda y gastar en otra: cada variación del tipo de cambio afecta tu presupuesto."] }),
+    concepto:["Descalce de monedas", "Ganar en una moneda y gastar en otra: cada variación del tipo de cambio afecta tu presupuesto.", "descalce-de-monedas"] }),
 
   () => pl({momento:3, saltable:true, burbujas:[
       "Un dato más, opcional: el costo escondido del crédito informal.",
@@ -1243,7 +1243,7 @@ const PANTALLAS = [
         el("p", {class:"leyenda"}, "Prueba al menos tres combinaciones."));
     } }),
 
-  () => pl({momento:3, boton:"Decidir otra vez", concepto:["No hay refugio fijo", "Lo que conserva tu poder adquisitivo depende de comparar precios, tasas y tipo de cambio en el mismo período."], burbujas:[
+  () => pl({momento:3, boton:"Decidir otra vez", concepto:["No hay refugio fijo", "Lo que conserva tu poder adquisitivo depende de comparar precios, tasas y tipo de cambio en el mismo período.", "no-hay-refugio-fijo"], burbujas:[
       "Cuando la tasa de cambio se queda quieta y los precios suben, ni el banco ni el dólar te protegen del todo.",
       "Cuando la tasa salta más que los precios, el dólar vuelve a ganar.",
       "No hay un refugio fijo. Hay variables que cambian, y se pueden analizar."] }),
