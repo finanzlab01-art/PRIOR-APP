@@ -14,12 +14,19 @@
 <meta name="apple-mobile-web-app-title" content="PRIOR">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ============ Horizonte · UX-003 (kit V1 borrador, 19 nov 2026) ============ */
 :root{
+  /* Tokens OFICIALES Horizonte (kit 14 oct 2026) */
   --principal:#1B2A4A; --acento:#E8A33D; --cielo:#7FB3D5; --arena:#E6DFD3;
   --texto:#16213A; --texto2:#5B6475; --fondo:#F7F3EA; --tarjeta:#FFFFFF;
   --sobre-principal:#F7F3EA; --sol:#E8A33D;
+  /* Extensión PROPUESTA en el kit V1: NO son decisiones oficiales de marca (pendientes de aprobación) */
+  --borde:#7A8091;          /* borde fuerte de controles (3,56:1 sobre fondo) */
+  --seleccion:#E8F0F7;      /* relleno de opción elegida */
+  --error:#A8322B; --error-fondo:#F8E5E2;
+  --deshab-texto:#6F7686; --deshab-fondo:#ECE6DA;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark){
@@ -27,6 +34,10 @@
     --principal:#8EC3E6; --acento:#F0B24E; --cielo:#4F7396; --arena:#2A3550;
     --texto:#F2EDE3; --texto2:#A9B1C1; --fondo:#0F1A2E; --tarjeta:#18243B;
     --sobre-principal:#0F1A2E; --sol:#F0B24E;
+    /* Extensión PROPUESTA (modo oscuro) */
+    --borde:#6B7894; --seleccion:#1E3350;
+    --error:#FF9A8F; --error-fondo:#3E1F25;
+    --deshab-texto:#7D879B; --deshab-fondo:#1E2A42;
     color-scheme: dark;
   }
 }
@@ -35,69 +46,81 @@ html,body{height:100%;margin:0}
 body{
   background:var(--fondo); color:var(--texto);
   font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  font-size:16px; line-height:1.625; -webkit-font-smoothing:antialiased;
 }
 .app{
   max-width:460px; margin:0 auto; min-height:100%;
   display:flex; flex-direction:column;
-  padding:calc(env(safe-area-inset-top,0px) + 24px) 24px calc(env(safe-area-inset-bottom,0px) + 32px);
+  padding:calc(env(safe-area-inset-top,0px) + 24px) 20px calc(env(safe-area-inset-bottom,0px) + 32px);
 }
+/* Tablet y escritorio: columna de lectura centrada (kit: máx. 680 px) */
+@media (min-width:700px){ .app{max-width:640px; padding-left:24px; padding-right:24px} }
+@media (min-width:1024px){ .app{max-width:680px; padding-top:calc(env(safe-area-inset-top,0px) + 40px)} }
 h1,h2,.marca{font-family:"Plus Jakarta Sans", Inter, system-ui, sans-serif;}
-.marca{font-weight:800; letter-spacing:.14em; font-size:15px; color:var(--principal);}
+.marca{font-weight:700; letter-spacing:.14em; font-size:15px; color:var(--principal);}
 button{font:inherit; color:inherit; cursor:pointer}
-:focus-visible{outline:3px solid var(--cielo); outline-offset:2px; border-radius:12px}
+/* Foco: anillo de 3 px que nunca se oculta (Primary del modo; kit) */
+:focus-visible{outline:3px solid var(--principal); outline-offset:3px; border-radius:12px}
 
-/* Horizonte: barra de progreso con sol que sube */
+/* Horizonte: barra de progreso con sol que sube (relleno Primary que termina en el sol con contorno) */
 .horizonte{position:relative; height:46px; margin:20px 0 10px}
 .horizonte .linea{position:absolute; left:0; right:0; bottom:10px; height:2px; background:var(--arena)}
-.horizonte .avance{position:absolute; left:0; bottom:10px; height:2px; background:var(--cielo); transition:width .5s ease}
-.horizonte .sol{position:absolute; width:22px; height:22px; border-radius:50%; background:var(--sol);
+.horizonte .avance{position:absolute; left:0; bottom:10px; height:2px; background:var(--principal); transition:width .5s ease}
+.horizonte .sol{position:absolute; width:22px; height:22px; border-radius:50%; background:var(--sol); border:2px solid var(--principal);
   transform:translate(-50%, 0); transition:left .5s ease, bottom .5s ease}
-.horizonte .paso{position:absolute; right:0; top:0; font-size:13px; color:var(--texto2)}
+.horizonte .paso{position:absolute; right:0; top:0; font-size:14px; color:var(--texto2)}
 .bloque{font-size:14px; color:var(--texto2); font-weight:500}
 
 /* Guía */
 .guia{display:flex; flex-direction:column; gap:14px; margin:28px 0 8px}
 .burbuja{
-  background:var(--tarjeta); border:1px solid var(--arena); border-radius:4px 18px 18px 18px;
-  padding:16px 18px; max-width:92%; min-height:1.6em;
+  background:var(--tarjeta); border:1px solid var(--arena); border-radius:4px 12px 12px 12px;
+  padding:16px 18px; max-width:min(92%, 65ch); min-height:1.6em;
 }
 .burbuja.pregunta{font-weight:600}
 .burbuja.entra{animation:entra .25s ease both}
 @keyframes entra{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
-.saltar{font-size:13px; color:var(--texto2); background:none; border:0; padding:4px 0; align-self:flex-start}
+.saltar{font-size:14px; color:var(--texto2); background:none; border:0; padding:10px 0; min-height:44px; align-self:flex-start; text-decoration:underline}
 
-/* Opciones */
+/* Opciones: borde fuerte de 2 px; elegida = borde Primary + relleno + ✓ + etiqueta (no depende del color) */
 .opciones{display:flex; flex-direction:column; gap:12px; margin-top:26px}
 .opcion{
-  display:flex; gap:12px; align-items:flex-start; text-align:left;
-  background:transparent; border:1.5px solid var(--arena); border-radius:16px; padding:16px 16px;
+  display:flex; gap:12px; align-items:flex-start; text-align:left; min-height:56px;
+  background:var(--tarjeta); border:2px solid var(--borde); border-radius:12px; padding:14px 16px;
   transition:border-color .15s, background .15s;
 }
+.opcion > span:not(.letra){flex:1}
 .opcion .letra{flex:0 0 26px; height:26px; border-radius:50%; display:grid; place-items:center;
   font-size:13px; font-weight:600; background:var(--arena); color:var(--texto)}
-.opcion:hover{border-color:var(--cielo)}
-.opcion[aria-pressed="true"]{border-color:var(--principal); background:var(--tarjeta)}
+.opcion:hover{border-color:var(--principal)}
+.opcion[aria-pressed="true"]{border-color:var(--principal); background:var(--seleccion)}
 .opcion[aria-pressed="true"] .letra{background:var(--principal); color:var(--sobre-principal)}
+.opcion[aria-pressed="true"]::after{content:"✓ Elegida"; flex:0 0 auto; align-self:center; font-size:12px; font-weight:600;
+  letter-spacing:.02em; color:var(--principal)}
 .opcion:disabled{cursor:default}
-.opcion:disabled:not([aria-pressed="true"]){opacity:.45}
+.opcion:disabled:not([aria-pressed="true"]){opacity:.55}
 .oculto{display:none !important}
 
 .consecuencia{
-  margin-top:24px; padding:14px 16px; border-left:3px solid var(--acento);
-  background:var(--tarjeta); border-radius:0 12px 12px 0; font-size:15px;
+  margin-top:24px; padding:14px 16px; border:1px solid var(--arena); border-left:4px solid var(--principal);
+  background:var(--tarjeta); border-radius:4px 12px 12px 4px; font-size:15px;
 }
 .consecuencia b{font-weight:600}
 
-/* Botones */
+/* Botones: primario (uno por pantalla), secundario, terciario; estados normal, hover, presionado, foco, deshabilitado */
 .acciones{margin-top:auto; padding-top:36px; display:flex; flex-direction:column; gap:10px}
 .btn{
-  border:0; border-radius:14px; padding:15px 18px; font-weight:600; font-size:16px;
+  border:2px solid transparent; border-radius:12px; padding:12px 18px; min-height:48px; font-weight:600; font-size:16px;
   background:var(--principal); color:var(--sobre-principal);
 }
-.btn:disabled{opacity:.35; cursor:default}
-.btn.secundario{background:transparent; color:var(--principal); border:1.5px solid var(--arena)}
-.btn.texto{background:none; color:var(--texto2); font-weight:500; padding:8px}
+.btn:hover:not(:disabled){filter:brightness(1.15)}
+.btn:active:not(:disabled){filter:brightness(.92)}
+.btn:disabled{background:var(--deshab-fondo); color:var(--deshab-texto); cursor:not-allowed}
+.btn.secundario{background:transparent; color:var(--principal); border-color:var(--borde)}
+.btn.secundario:hover:not(:disabled){filter:none; border-color:var(--principal); background:var(--seleccion)}
+.btn.secundario:disabled{background:transparent; border-color:var(--arena); color:var(--deshab-texto)}
+.btn.texto{background:none; color:var(--principal); font-weight:500; padding:10px; text-decoration:underline; border-color:transparent}
+.btn.texto:hover:not(:disabled){filter:none; background:var(--seleccion)}
 
 /* Bienvenida */
 .portada{flex:1; display:flex; flex-direction:column; justify-content:center}
@@ -107,32 +130,39 @@ button{font:inherit; color:inherit; cursor:pointer}
 .escena .mar{position:absolute; left:0; right:0; bottom:0; height:30px; background:var(--fondo)}
 .escena .linea{position:absolute; left:0; right:0; bottom:29px; height:2px; background:var(--cielo)}
 @keyframes amanecer{to{transform:translate(-50%, 0)}}
-.lema{font-size:34px; line-height:1.12; font-weight:800; margin:0 0 10px; color:var(--principal)}
+/* Display: Plus Jakarta Sans 700, 32/40 en móvil y 40/48 en pantallas grandes */
+.lema{font-size:32px; line-height:40px; font-weight:700; letter-spacing:-.02em; margin:0 0 10px; color:var(--principal)}
+@media (min-width:700px){ .lema{font-size:40px; line-height:48px} }
 .sublema{color:var(--texto2); margin:0}
 
 /* Resultado */
-.titulo{font-size:26px; line-height:1.2; font-weight:800; margin:18px 0 8px; color:var(--principal)}
+/* H1: Plus Jakarta Sans 600, 28/36 en móvil y 32/40 en pantallas grandes */
+.titulo{font-size:28px; line-height:36px; font-weight:600; letter-spacing:-.015em; margin:18px 0 8px; color:var(--principal)}
+@media (min-width:700px){ .titulo{font-size:32px; line-height:40px} }
 .mezcla{display:flex; flex-direction:column; gap:24px; margin:30px 0 8px}
 .materia .fila{display:flex; justify-content:space-between; align-items:baseline}
 .materia .nombre{font-weight:600}
-.materia .pct{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; font-size:22px; color:var(--principal)}
+.materia .pct{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:700; font-size:22px; color:var(--principal)}
 .barra{height:10px; border-radius:6px; background:var(--arena); overflow:hidden; margin:6px 0 6px}
 .barra i{display:block; height:100%; width:0; background:var(--principal); border-radius:6px; transition:width 1s cubic-bezier(.2,.7,.2,1)}
-.materia.primera .barra i{background:var(--acento)}
+/* El ámbar no es relleno de barra: marca con un punto "sol" dónde empezar */
+.materia.primera .nombre::before{content:""; display:inline-block; width:12px; height:12px; border-radius:50%;
+  background:var(--sol); border:2px solid var(--principal); margin-right:8px; vertical-align:-1px}
 .materia p{margin:0; color:var(--texto2); font-size:14.5px}
 .porque{margin:0 0 6px}
 .creencias{margin-top:28px}
-.creencias h2{font-size:18px; margin:0 0 6px; color:var(--principal)}
-.creencias .tarjeta{margin-top:16px; border-left:4px solid var(--acento)}
+/* H2: Plus Jakarta Sans 600, 24/32 */
+.creencias h2{font-size:24px; line-height:32px; font-weight:600; letter-spacing:-.01em; margin:0 0 6px; color:var(--principal)}
+.creencias .tarjeta{margin-top:16px; border-left:4px solid var(--principal)}
 .creencias .tarjeta h3{margin-bottom:10px; color:var(--principal)}
 .creencias .tarjeta p + p{margin-top:10px}
 .creencias .tarjeta b{display:block; color:var(--texto); font-weight:600; font-size:14px}
 .invitacion{margin:28px 0 0; color:var(--texto2)}
-.nota{font-size:13px; color:var(--texto2); margin-top:14px}
+.nota{font-size:14px; color:var(--texto2); margin-top:14px}
 
 /* Cuenta */
-.btn.google{background:var(--tarjeta); color:var(--texto); border:1.5px solid var(--arena)}
-.aviso-demo{font-size:13px; color:var(--texto2); text-align:center; min-height:1.4em}
+.btn.google{background:var(--tarjeta); color:var(--texto); border-color:var(--borde)}
+.aviso-demo{font-size:14px; color:var(--texto2); text-align:center; min-height:1.4em}
 
 /* Lección */
 .cabecera{display:flex; justify-content:space-between; align-items:center}
@@ -140,67 +170,90 @@ button{font:inherit; color:inherit; cursor:pointer}
 .momento{font-size:14px; color:var(--texto2); font-weight:500; margin-top:6px}
 /* Criterio: un sello tranquilo dentro del flujo, no una notificación */
 .sello{display:flex; align-items:center; gap:12px; margin-top:22px; padding:12px 16px;
-  border:1px solid var(--arena); border-radius:14px; width:fit-content; max-width:100%;
+  border:1px solid var(--arena); border-radius:12px; width:fit-content; max-width:100%;
   background:var(--tarjeta); animation:sello .5s cubic-bezier(.2,.7,.2,1) both}
-.sello .sol-mini{flex:0 0 18px; height:18px; border-radius:50%; background:var(--sol); box-shadow:0 0 0 4px color-mix(in srgb, var(--sol) 22%, transparent)}
-.sello b{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; color:var(--principal); font-size:15px; white-space:nowrap}
+.sello .sol-mini{flex:0 0 18px; height:18px; border-radius:50%; background:var(--sol); border:2px solid var(--principal)}
+.sello b{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:700; color:var(--principal); font-size:15px; white-space:nowrap}
 .sello span{color:var(--texto2); font-size:14px}
 @keyframes sello{from{opacity:0; transform:translateY(6px)}}
 .criterio-total{display:flex; align-items:center; gap:8px}
-.criterio-total::before{content:""; width:10px; height:10px; border-radius:50%; background:var(--sol)}
+.criterio-total::before{content:""; width:12px; height:12px; border-radius:50%; background:var(--sol); border:2px solid var(--principal)}
 .criterio-total.sube{animation:sube .6s ease}
 @keyframes sube{40%{transform:scale(1.12)}}
 /* Concepto: lo que la persona se lleva de cada pantalla de teoría */
-.concepto{margin-top:22px; padding:18px 18px 16px; border-radius:16px; background:var(--principal); color:var(--sobre-principal)}
-.concepto small{display:block; font-size:13px; opacity:.8; margin-bottom:4px}
-.concepto h3{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-size:19px; margin:0 0 6px}
-.concepto p{margin:0; font-size:15px; opacity:.95}
-.subtitulo{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-size:17px; margin:30px 0 0; color:var(--principal)}
-.tarjeta{background:var(--tarjeta); border:1px solid var(--arena); border-radius:16px; padding:16px 18px; margin-top:20px}
-.tarjeta h3{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-size:16px; margin:0 0 4px}
+.concepto{margin-top:22px; padding:18px 18px 16px; border-radius:12px; background:var(--principal); color:var(--sobre-principal)}
+.concepto small{display:block; font-size:14px; opacity:.9; margin-bottom:4px}
+.concepto h3{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:500; font-size:20px; line-height:28px; margin:0 0 6px}
+.concepto p{margin:0; font-size:15px}
+.subtitulo{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:600; font-size:24px; line-height:32px; letter-spacing:-.01em; margin:30px 0 0; color:var(--principal)}
+.tarjeta{background:var(--tarjeta); border:1px solid var(--arena); border-radius:12px; padding:16px 18px; margin-top:20px}
+/* Title: Plus Jakarta Sans 600, 18/26 */
+.tarjeta h3{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:600; font-size:18px; line-height:26px; margin:0 0 4px}
 .tarjeta p{margin:0; color:var(--texto2); font-size:15px}
-.vermas{background:none; border:0; color:var(--principal); font-weight:600; padding:8px 0; text-align:left}
+.vermas{background:none; border:0; color:var(--principal); font-weight:600; padding:10px 0; min-height:44px; text-align:left; text-decoration:underline}
 .monedas{display:grid; grid-template-columns:repeat(10,1fr); gap:5px; margin:14px 0 6px; max-width:300px}
-.monedas i{aspect-ratio:1; border-radius:50%; background:var(--cielo); transition:background .3s, transform .3s}
+.monedas i{aspect-ratio:1; border-radius:50%; background:var(--principal); transition:background .3s, transform .3s}
 .monedas i.encajada{background:var(--arena); transform:scale(.8)}
-.leyenda{font-size:13px; color:var(--texto2)}
+.leyenda{font-size:14px; color:var(--texto2)}
+/* Control deslizante: etiqueta + valor, flechas/Inicio/Fin del teclado y botones − / + */
 .slider{margin:24px 0 6px}
 .slider label{display:flex; justify-content:space-between; font-size:15px; font-weight:500}
-.slider input{width:100%; accent-color:var(--principal); margin-top:6px}
-.cifra{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; font-size:28px; color:var(--principal); margin:10px 0 0}
-.formula{font-size:13px; color:var(--texto2)}
+.slider .control{display:flex; align-items:center; gap:8px; margin-top:6px}
+.slider input{flex:1; min-width:0; min-height:44px; accent-color:var(--principal); margin:0}
+.slider .ajuste{flex:0 0 44px; width:44px; height:44px; border-radius:12px; border:2px solid var(--borde);
+  background:var(--tarjeta); color:var(--principal); font-size:22px; font-weight:600; line-height:1; padding:0}
+.slider .ajuste:hover{border-color:var(--principal); background:var(--seleccion)}
+.cifra{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:700; font-size:28px; color:var(--principal); margin:10px 0 0}
+.formula{font-size:14px; color:var(--texto2)}
 .barras{display:flex; flex-direction:column; gap:18px; margin-top:22px}
 .barras .fila{display:flex; justify-content:space-between; font-size:14.5px}
-.barras .tuya .barra i{background:var(--acento)}
-.barras .barra{position:relative}
+.barras.con-tuya .barra i{background:var(--texto2)}
+.barras.con-tuya .tuya .barra i{background:var(--principal)}
+.barras .barra{position:relative; overflow:visible}
+.barras .barra i{border-radius:6px}
 .barras .barra .marca-uno{position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--texto2)}
-.fuente{font-size:12.5px; color:var(--texto2); margin-top:12px}
+.fuente{font-size:12px; line-height:16px; letter-spacing:.01em; color:var(--texto2); margin-top:12px}
 textarea{width:100%; min-height:90px; font:inherit; color:var(--texto); background:var(--tarjeta);
-  border:1.5px solid var(--arena); border-radius:14px; padding:12px 14px; margin-top:12px; resize:vertical}
+  border:2px solid var(--borde); border-radius:12px; padding:12px 14px; margin-top:12px; resize:vertical}
+textarea:focus{border-color:var(--principal)}
 .pregunta-chica{font-weight:600; margin:18px 0 0}
 .lista{margin:10px 0 0; padding-left:20px}
 .lista li{margin:6px 0}
 
 /* Cuenta */
 .campo{display:flex; flex-direction:column; gap:6px; margin-top:18px; font-size:15px; font-weight:500}
-.campo input{font:inherit; font-weight:400; color:var(--texto); background:var(--tarjeta); border:1.5px solid var(--arena);
-  border-radius:14px; padding:14px 16px}
-.campo input:focus{border-color:var(--cielo); outline:none}
-.error{color:#B4462F; font-size:14px; min-height:1.4em; margin-top:12px}
-@media (prefers-color-scheme: dark){ .error{color:#F2A38F} }
-.privacidad{font-size:13px; color:var(--texto2); margin-top:16px}
-.codigo{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:800; font-size:22px; color:var(--principal); letter-spacing:.06em}
+.campo input{font:inherit; font-weight:400; color:var(--texto); background:var(--tarjeta); border:2px solid var(--borde);
+  border-radius:12px; padding:12px 16px; min-height:48px}
+.campo input:focus{border-color:var(--principal)}
+.campo input::placeholder{color:var(--texto2); opacity:1}
+/* Error: color de error + icono + texto (nunca solo color) */
+.error{color:var(--error); font-size:14px; min-height:1.4em; margin-top:12px}
+.error:not(:empty){background:var(--error-fondo); border:1px solid var(--error); border-radius:12px; padding:10px 12px}
+.error:not(:empty)::before{content:"!"; display:inline-grid; place-items:center; width:18px; height:18px; margin-right:8px;
+  border-radius:50%; background:var(--error); color:var(--error-fondo); font-weight:700; font-size:12px; line-height:1; vertical-align:1px}
+.privacidad{font-size:14px; color:var(--texto2); margin-top:16px}
+.codigo{font-family:"Plus Jakarta Sans", Inter, sans-serif; font-weight:700; font-size:22px; color:var(--principal); letter-spacing:.06em}
 /* Otra respuesta (abierta): sirve para descubrir arquetipos nuevos */
 .opcion.otra{border-style:dashed}
 .opcion.otra .letra{background:transparent; color:var(--texto2); border:1.5px dashed var(--texto2)}
 .abierta{margin-top:14px}
 .abierta .btn{margin-top:12px; width:100%}
 .cuenta{height:3px; border-radius:3px; background:var(--arena); overflow:hidden; margin-bottom:6px}
-.cuenta i{display:block; height:100%; width:0; background:var(--acento); transition:width linear}
+.cuenta i{display:block; height:100%; width:0; background:var(--principal); transition:width linear}
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important; transition:none !important}
   .escena .sol-grande{transform:translate(-50%,0)}
 }
+.barra-app{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.btn-biblioteca{border:1.5px solid var(--borde);border-radius:999px;background:var(--tarjeta);color:var(--principal);padding:8px 13px;min-height:42px;font-size:13px;font-weight:600}
+.concepto-acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.concepto-acciones button{border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;padding:7px 11px;min-height:38px;font:600 13px Inter,sans-serif}
+.biblioteca-lista{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.biblioteca-item{background:var(--tarjeta);border:1px solid var(--arena);border-radius:12px;padding:16px}
+.biblioteca-item h2{font-size:18px;line-height:1.3;margin:0 0 8px;color:var(--principal)}
+.biblioteca-item p{margin:0;color:var(--texto2)}
+.biblioteca-item .meta{font-size:12px;margin-top:10px}
+.biblioteca-vacia{padding:20px;border:1px dashed var(--borde);border-radius:12px;color:var(--texto2);margin-top:18px}
 </style>
 </head>
 <body>
@@ -336,12 +389,12 @@ const MATERIAS = [
 
 // Resultado: por qué empieza la ruta en cada materia. {N} = decisiones donde pesó; {T} = decisiones que contaron.
 const POR_QUE = [
-  { con:"En {N} de tus {T} decisiones pesó más la dinámica de la tasa de cambio, los precios y el bolívar. Por ahí empezamos: entender esas variables hace más sólidas todas las demás decisiones.",
-    sin:"En tus decisiones pesó más la dinámica de la tasa de cambio, los precios y el bolívar. Por ahí empezamos: entender esas variables hace más sólidas todas las demás decisiones." },
-  { con:"En {N} de tus {T} decisiones, la duda estuvo en qué hacer con el excedente: en qué instrumento colocarlo, cuánto riesgo asumir y cómo diversificarlo. Por ahí empezamos.",
-    sin:"En tus decisiones, la duda estuvo en qué hacer con el excedente: en qué instrumento colocarlo, cuánto riesgo asumir y cómo diversificarlo. Por ahí empezamos." },
-  { con:"En {N} de tus {T} decisiones pesaron más los hábitos que dejó la crisis que los datos del momento. Por ahí empezamos: no para descartarlos, sino para evaluar cuáles todavía te sirven.",
-    sin:"En tus decisiones pesaron más los hábitos que dejó la crisis que los datos del momento. Por ahí empezamos: no para descartarlos, sino para evaluar cuáles todavía te sirven." }
+  { con:"En {N} de las {T} decisiones evaluadas apareció una brecha moderada o marcada al analizar el tipo de cambio (el precio de una moneda expresado en otra), los precios y el bolívar. Por eso tu ruta empieza por Economía: entender esas variables ayuda a comparar opciones.",
+    sin:"Tu mayor oportunidad de aprendizaje está en cómo influyen el tipo de cambio, los precios y el bolívar. Por eso tu ruta empieza por Economía: entender esas variables ayuda a comparar opciones." },
+  { con:"En {N} de las {T} decisiones evaluadas apareció una brecha moderada o marcada al decidir qué hacer con el excedente: comparar rendimiento (lo que genera el dinero), riesgo y liquidez (qué tan rápido puedes disponer del dinero). Por eso tu ruta empieza por Finanzas.",
+    sin:"Tu mayor oportunidad de aprendizaje está en decidir qué hacer con el excedente: comparar rendimiento, riesgo y liquidez (qué tan rápido puedes disponer del dinero). Por eso tu ruta empieza por Finanzas." },
+  { con:"En {N} de las {T} decisiones evaluadas apareció una brecha moderada o marcada entre hábitos aprendidos durante la crisis y los datos disponibles hoy. Por eso tu ruta empieza por Conducta y sociedad: revisaremos qué hábitos siguen siendo útiles.",
+    sin:"Tu mayor oportunidad de aprendizaje está en revisar cómo los hábitos aprendidos durante la crisis influyen en tus decisiones actuales y cuándo siguen siendo útiles." }
 ];
 const ELECCION_C3 = "Respondiste el cálculo de los porcentajes con mucha seguridad.";
 const CREENCIAS = {
@@ -443,6 +496,123 @@ async function guardarLeccion(){
 const estado = { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{} };
 const app = document.getElementById("app");
 const reducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const CLAVE_BIBLIOTECA = "prior_biblioteca_v1";
+const CLAVE_BIBLIOTECA_USUARIO = "prior_biblioteca_usuario_";
+const CLAVE_BIBLIOTECA_BORRADOS = "prior_biblioteca_borrados_";
+let estadoSyncBiblioteca = "local";
+let sincronizandoBiblioteca = false;
+let repetirSyncBiblioteca = false;
+const claveBibliotecaUsuario = id => CLAVE_BIBLIOTECA_USUARIO + id;
+const claveBorradosUsuario = id => CLAVE_BIBLIOTECA_BORRADOS + id;
+const claveBibliotecaActual = () => usuario ? claveBibliotecaUsuario(usuario.id) : CLAVE_BIBLIOTECA;
+const idConcepto = c => String(c.id || c[2] || c.nombre || c[0] || "")
+  .normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()
+  .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+function leerListaBiblioteca(clave){try{const v=JSON.parse(localStorage.getItem(clave)||"[]");return Array.isArray(v)?v:[];}catch{return [];}}
+function leerBiblioteca(){return leerListaBiblioteca(claveBibliotecaActual());}
+function guardarBiblioteca(items){try{localStorage.setItem(claveBibliotecaActual(),JSON.stringify(items));return true;}catch{return false;}}
+function guardarConcepto(concepto){
+  const items=leerBiblioteca(), id=idConcepto(concepto);
+  if(!id)return false;
+  const anterior=items.find(x=>(x.id||idConcepto(x))===id);
+  const item={id,nombre:concepto[0],definicion:concepto[1],guardado:anterior?.guardado||new Date().toISOString()};
+  const nuevos=[item,...items.filter(x=>(x.id||idConcepto(x))!==id)];
+  const ok=guardarBiblioteca(nuevos);
+  if(ok && usuario){
+    guardarBorrados(usuario.id,leerBorrados(usuario.id).filter(x=>x!==id));
+    sincronizarBiblioteca(usuario);
+  }
+  return ok;
+}
+function leerBorrados(id){return leerListaBiblioteca(claveBorradosUsuario(id));}
+function guardarBorrados(id,items){try{localStorage.setItem(claveBorradosUsuario(id),JSON.stringify(items));return true;}catch{return false;}}
+async function quitarConcepto(id){
+  const items=leerBiblioteca().filter(x=>(x.id||idConcepto(x))!==id);
+  if(!guardarBiblioteca(items)){estadoSyncBiblioteca="pendiente";biblioteca();return;}
+  if(usuario){
+    const borrados=[...new Set([...leerBorrados(usuario.id),id])];
+    guardarBorrados(usuario.id,borrados);
+    await sincronizarBiblioteca(usuario);
+  }
+  biblioteca();
+}
+async function sincronizarBiblioteca(user=usuario){
+  if(!sb || !user)return false;
+  if(sincronizandoBiblioteca){repetirSyncBiblioteca=true;return false;}
+  sincronizandoBiblioteca=true; estadoSyncBiblioteca="sincronizando";
+  try{
+    const claveUsuario=claveBibliotecaUsuario(user.id);
+    const locales=[...leerListaBiblioteca(CLAVE_BIBLIOTECA),...leerListaBiblioteca(claveUsuario)];
+    const {data:remotos,error:lecturaError}=await sb.from("biblioteca_conceptos")
+      .select("concepto_id,nombre,definicion,creado_en,actualizado_en").eq("user_id",user.id);
+    if(lecturaError)throw lecturaError;
+    const borrados=leerBorrados(user.id);
+    if(borrados.length){
+      const {error}=await sb.from("biblioteca_conceptos").delete()
+        .eq("user_id",user.id).in("concepto_id",borrados);
+      if(error)throw error;
+    }
+    const mapa=new Map((remotos||[]).filter(x=>!borrados.includes(x.concepto_id))
+      .map(x=>[x.concepto_id,{id:x.concepto_id,nombre:x.nombre,definicion:x.definicion,guardado:x.actualizado_en||x.creado_en}]));
+    locales.forEach(x=>{
+      const id=x.id||idConcepto(x); if(!id||borrados.includes(id))return;
+      const previo=mapa.get(id);
+      if(!previo || !previo.guardado || !x.guardado || new Date(x.guardado)>=new Date(previo.guardado))
+        mapa.set(id,{id,nombre:x.nombre,definicion:x.definicion,guardado:x.guardado||new Date().toISOString()});
+    });
+    const unidos=[...mapa.values()];
+    if(unidos.length){
+      const filas=unidos.map(x=>({user_id:user.id,concepto_id:x.id,nombre:x.nombre,definicion:x.definicion,actualizado_en:x.guardado||new Date().toISOString()}));
+      const {error}=await sb.from("biblioteca_conceptos").upsert(filas,{onConflict:"user_id,concepto_id"});
+      if(error)throw error;
+    }
+    const {data:finales,error:finalError}=await sb.from("biblioteca_conceptos")
+      .select("concepto_id,nombre,definicion,creado_en,actualizado_en").eq("user_id",user.id);
+    if(finalError)throw finalError;
+    localStorage.setItem(claveUsuario,JSON.stringify((finales||[]).map(x=>({
+      id:x.concepto_id,nombre:x.nombre,definicion:x.definicion,guardado:x.actualizado_en||x.creado_en
+    }))));
+    localStorage.removeItem(CLAVE_BIBLIOTECA);
+    guardarBorrados(user.id,[]);
+    estadoSyncBiblioteca="sincronizada";
+    return true;
+  }catch(error){
+    console.error("Sincronización de biblioteca pendiente:",error.message||error);
+    estadoSyncBiblioteca="pendiente";
+    return false;
+  }finally{
+    sincronizandoBiblioteca=false;
+    if(repetirSyncBiblioteca){
+      repetirSyncBiblioteca=false;
+      if(usuario) setTimeout(()=>sincronizarBiblioteca(usuario),0);
+    }
+  }
+}
+function biblioteca(){
+  registrarPaso("biblioteca");const items=leerBiblioteca();const lista=el("div",{class:"biblioteca-lista"});
+  if(!items.length)lista.append(el("div",{class:"biblioteca-vacia"},"Todavía no has guardado conceptos. Durante una lección, toca «Guardar en mi biblioteca» para conservar una idea."));
+  else items.forEach(item=>{
+    const tarjeta=el("article",{class:"biblioteca-item"});
+    tarjeta.append(el("h2",{},item.nombre),el("p",{},item.definicion),
+      el("p",{class:"meta"},usuario?"Guardado en tu cuenta":"Guardado en este dispositivo"),
+      el("button",{class:"btn texto",type:"button",onclick:()=>quitarConcepto(item.id||idConcepto(item))},"Quitar de mi biblioteca"));
+    lista.append(tarjeta);
+  });
+  const estado=el("p",{class:"aviso-demo",role:"status"},usuario?
+    (estadoSyncBiblioteca==="sincronizada"?"Tu biblioteca está sincronizada con tu cuenta.":estadoSyncBiblioteca==="pendiente"?"Tus cambios siguen guardados en este dispositivo; falta sincronizarlos.":estadoSyncBiblioteca==="sincronizando"?"Sincronizando tu biblioteca…":"Biblioteca guardada en tu cuenta."):"Tu biblioteca está guardada en este dispositivo.");
+  const reintentar=usuario&&estadoSyncBiblioteca==="pendiente"?el("button",{class:"btn secundario",type:"button",onclick:async()=>{await sincronizarBiblioteca(usuario);biblioteca();}},"Reintentar sincronización"):null;
+  const salir=usuario?el("button",{class:"btn-biblioteca",type:"button",onclick:async()=>{
+    const {error}=await sb.auth.signOut();
+    if(error){estadoSyncBiblioteca="pendiente";biblioteca();return;}
+    usuario=null;estadoSyncBiblioteca="local";biblioteca();
+  }},"Cerrar sesión"):null;
+  pantalla(el("div",{class:"barra-app"},el("span",{class:"marca"},"PRIOR"),
+    el("div",{style:"display:flex;gap:8px;align-items:center;flex-wrap:wrap"},
+      salir,el("button",{class:"btn-biblioteca",type:"button",onclick:()=>PANTALLAS[L.paso]()},"Volver"))),
+    el("h1",{class:"titulo"},"Mi biblioteca"),
+    el("p",{class:"sublema"},usuario?"Conceptos guardados en tu cuenta y disponibles al iniciar sesión.":"Conceptos guardados en este dispositivo. Puedes usarla sin crear una cuenta."),
+    estado,reintentar,lista);
+}
 
 /* ---------- Utilidades ---------- */
 const el = (tag, attrs={}, ...hijos) => {
@@ -455,6 +625,12 @@ const el = (tag, attrs={}, ...hijos) => {
   for (const h of hijos) if (h != null) n.append(h);
   return n;
 };
+
+if(sb) sb.auth.onAuthStateChange((evento,sesion)=>{
+  usuario=sesion?.user||null;
+  if(usuario) Promise.resolve().then(()=>sincronizarBiblioteca(usuario));
+  else estadoSyncBiblioteca="local";
+});
 
 // Burbujas que aparecen una a una como mensajes; un toque las muestra todas.
 function escribir(contenedor, textos, alTerminar){
@@ -689,22 +865,22 @@ function resultado(){
 
   const linea = (etiqueta, texto) => el("p", {}, el("b", {}, etiqueta), texto);
   const creencias = estado.detalleCreencias.length ? el("section", {class:"creencias"},
-    el("h2", {}, "Creencias heredadas que vamos a revisar contigo"),
-    el("p", {class:"sublema"}, "Ninguna es un error. Son atajos para decidir (heurísticas) que aprendimos en años difíciles."),
+    el("h2", {}, "Patrones de decisión que vamos a revisar contigo"),
+    el("p", {class:"sublema"}, "Ninguna es un error. Son heurísticas: atajos mentales que aprendimos en años difíciles y que pueden seguir influyendo en tus decisiones."),
     ...estado.detalleCreencias.slice(0,3).map(({dogma, eleccion}) => el("div", {class:"tarjeta"},
       el("h3", {}, dogma),
       linea("Lo que elegiste:", eleccion === ELECCION_C3 ? eleccion : `«${eleccion}»`),
       linea("Por qué tiene sentido:", CREENCIAS[dogma].porque),
       linea("Lo que vamos a revisar:", CREENCIAS[dogma].revisar))))
     : el("section", {class:"creencias"}, el("div", {class:"tarjeta"},
-      el("p", {}, "No apareció ninguna creencia fuerte en tus decisiones. Es una buena base: tu ruta se va a enfocar más en afinar el análisis de las cifras que en revisar hábitos.")));
+      el("p", {}, "En tus respuestas no apareció una creencia marcada como activa. Eso no significa que no tengas hábitos que revisar: tu ruta empezará por fortalecer el análisis de cifras y decisiones.")));
 
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
     el("h1", {class:"titulo"}, `Tu ruta empieza por ${MATERIAS[primera].nombre.toLowerCase()}.`),
     el("p", {class:"porque"}, porque),
     creencias,
-    el("p", {class:"sublema", style:"margin-top:32px"}, "Esta es tu mezcla: cuánto de cada materia va a tener tu ruta. Ninguna baja de 20%, para que no te saltes nada."),
+    el("p", {class:"sublema", style:"margin-top:32px"}, "Esta es la distribución de tu ruta: el porcentaje de actividades dedicado a cada materia. Ninguna baja de 20%, para que trabajes las tres."),
     el("div", {class:"mezcla"}, ...filas),
     el("p", {class:"invitacion"}, "Tu primera lección: Tasas, bancos y tu bolívar."),
     el("div", {class:"acciones"}, el("button", {class:"btn", type:"button", onclick:irALeccion}, "Empezar mi primera lección"))
@@ -761,9 +937,9 @@ function cuenta(){
 /* ================= Lección E1: Tasas, bancos y tu bolívar (guion v2, 13 oct 2026) ================= */
 // Cifras que caducan: en la app real viven en una tabla editable de Supabase.
 const DATOS = {
-  sueldo:91575, mitad:45787.5, tasaBCV:"915,75", tasaFecha:"17 nov 2026", plazo:0.46, cuenta:0.10, ahorro:0.42,
+  sueldo:91575, mitad:45787.5, tasaBCV:"915,75", tasaFecha:"noviembre 2026", plazo:0.51, cuenta:0.15, ahorro:0.47,
   inflMes:0.062, inflAnual:3.769, dolarMes:0.035, costoCambio:0.99,
-  encajeVista:73, encajePlazo:50, fuente:"Cifras ilustrativas con datos del BCV: tasa oficial del 17 de noviembre de 2026; inflación de octubre de 2026 (mensual 6,2%; doce meses 376,9%)."
+  encajeVista:73, encajePlazo:50, fuente:"Tasas mínimas vigentes desde el 1/11/2026: 15% depósitos a la vista (salvo sector público), 47% ahorro y 51% plazo. Resolución BCV 26-10-01, Gaceta Oficial 43.489 del 28/10/2026. Inflación de octubre de 2026: mensual 6,2%; doce meses 376,9%. Encaje: 73% vista/ahorro y 50% plazo."
 };
 const fmt = n => n.toLocaleString("es-VE", {maximumFractionDigits:0});
 const pct = (n, d=1) => (n*100).toLocaleString("es-VE", {minimumFractionDigits:d, maximumFractionDigits:d}) + "%";
@@ -774,16 +950,16 @@ const poder = (op, i, d) => {
   if (op === 2) return Math.pow(1+d, 3) * DATOS.costoCambio / c;
   return 1;
 };
-const OPC_LECCION = ["Los coloco a plazo. 46% es más de lo que rinde casi cualquier otra opción.",
-  "Los dejo en la cuenta. Paga 10% y tengo liquidez: puedo usarlos cuando quiera.",
+const OPC_LECCION = ["Los coloco a plazo. 51% es más de lo que rinde casi cualquier otra opción.",
+  "Los dejo en una cuenta a la vista. Paga 15% anual y tengo liquidez: puedo disponer del dinero cuando lo necesite.",
   "Los cambio hoy a dólares y los guardo hasta que los necesite.",
   "Compro hoy cosas que sé que voy a usar en esos tres meses."];
-const OPC_CORTAS = ["Plazo al 46%", "Cuenta al 10%", "Dólares", "Comprar hoy lo que usaré"];
+const OPC_CORTAS = ["Plazo al 51%", "Cuenta a la vista al 15%", "Dólares", "Comprar hoy lo que usaré"];
 // Pregunta de predicción según lo que eligió la persona en el momento 1.
 const PREDICCION = [
-  ["El banco te paga 46% al año. En octubre los precios subieron 6,2% en un solo mes.",
+  ["El banco te paga 51% al año. En octubre los precios subieron 6,2% en un solo mes.",
    {texto:"En tres meses, ¿tus bolívares a plazo compran más o menos que hoy?", clase:"pregunta"}],
-  ["La cuenta te paga 10% al año. En octubre los precios subieron 6,2% en un solo mes.",
+  ["La cuenta te paga 15% al año. En octubre los precios subieron 6,2% en un solo mes.",
    {texto:"En tres meses, ¿tus bolívares en la cuenta compran más o menos que hoy?", clase:"pregunta"}],
   ["En octubre el dólar oficial subió cerca de 3,5% y los precios subieron 6,2%, en un solo mes.",
    {texto:"En tres meses, ¿tus dólares compran más o menos aquí que hoy?", clase:"pregunta"}],
@@ -819,7 +995,7 @@ function pl({momento, burbujas, construir, boton="Seguir", saltable=false, conce
   if (auto) seguir.classList.add("oculto");
   if (saltable) acciones.append(el("button", {class:"btn texto", type:"button", onclick:() => { L.paso++; PANTALLAS[L.paso](); }}, "Saltar esta parte"));
   pantalla(
-    el("div", {class:"cabecera"}, el("span", {class:"marca"}, "PRIOR"), el("span", {class:"criterio-total"}, `${L.criterio} Criterio`)),
+    el("div", {class:"barra-app"}, el("span", {class:"marca"}, "PRIOR"), el("div",{},el("button",{class:"btn-biblioteca",type:"button",onclick:biblioteca},"Mi biblioteca"),el("span",{class:"criterio-total"}, `${L.criterio} Criterio`))),
     horizonte(L.paso+1, total),
     el("div", {class:"momento"}, `Momento ${momento} de 5 · ${MOMENTOS[momento-1]}`),
     guia, zona, acciones
@@ -843,7 +1019,12 @@ function pl({momento, burbujas, construir, boton="Seguir", saltable=false, conce
     }
     if (concepto && !zona.querySelector(".concepto")) setTimeout(() => {
       if (zona.querySelector(".concepto")) return;
-      zona.append(el("div", {class:"concepto"}, el("small", {}, "La idea"), el("h3", {}, concepto[0]), el("p", {}, concepto[1])));
+      const caja=el("div",{class:"concepto"},el("small",{},"La idea"),el("h3",{},concepto[0]),el("p",{},concepto[1]));
+      const acciones=el("div",{class:"concepto-acciones"});
+      const guardar=el("button",{type:"button"},"Guardar en mi biblioteca");
+      guardar.addEventListener("click",()=>{const ok=guardarConcepto(concepto);guardar.textContent=ok?(usuario?"Guardado ✓":"Guardado ✓"):"No se pudo guardar";guardar.disabled=ok;});
+      const consultar=el("button",{type:"button"},"Ver mi biblioteca");consultar.addEventListener("click",biblioteca);
+      acciones.append(guardar,consultar);caja.append(acciones);zona.append(caja);
     }, 10);
     if (concepto && !L.conceptos.some(c => c[0] === concepto[0])) L.conceptos.push(concepto);
   };
@@ -868,10 +1049,15 @@ function slider(etiqueta, min, max, paso, valor, mostrar, alMover){
   const salida = el("span", {}, mostrar(valor));
   const input = el("input", {type:"range", min, max, step:paso, value:valor, "aria-label":etiqueta});
   input.addEventListener("input", () => { salida.textContent = mostrar(+input.value); alMover(+input.value); });
-  return el("div", {class:"slider"}, el("label", {}, el("span", {}, etiqueta), salida), input);
+  // Botones − / + como alternativa al arrastre (kit Horizonte); usan el mismo paso del control.
+  const ajustar = (dir) => () => { dir < 0 ? input.stepDown() : input.stepUp(); input.dispatchEvent(new Event("input", {bubbles:true})); };
+  const menos = el("button", {class:"ajuste", type:"button", "aria-label":`Reducir ${etiqueta.toLowerCase()}`}, "−");
+  const mas = el("button", {class:"ajuste", type:"button", "aria-label":`Aumentar ${etiqueta.toLowerCase()}`}, "+");
+  menos.addEventListener("click", ajustar(-1)); mas.addEventListener("click", ajustar(1));
+  return el("div", {class:"slider"}, el("label", {}, el("span", {}, etiqueta), salida), el("div", {class:"control"}, menos, input, mas));
 }
 function barrasPoder(valores, tuya){
-  const cont = el("div", {class:"barras"});
+  const cont = el("div", {class:"barras" + (tuya >= 0 ? " con-tuya" : "")});
   const filas = valores.map(([nombre, v], k) => {
     const i = el("i"); const marca = el("span", {class:"marca-uno"});
     const etiqueta = el("span", {}, "");
@@ -898,7 +1084,7 @@ const PANTALLAS = [
       ...(grupoMoneda(estado.perfil.moneda) === "usd" ? [`Tú cobras en ${MONEDA_TEXTO[estado.perfil.moneda]}, pero igual pagas en bolívares. Esta lección parte de alguien que cobra en bolívares, porque explica cómo funciona el bolívar que usas cada día.`] : []),
       `Imagina que hoy te depositaron Bs. ${fmt(DATOS.sueldo)}. A la tasa BCV del ${DATOS.tasaFecha} (${DATOS.tasaBCV} Bs por dólar) son unos 100 dólares.`,
       `La mitad, Bs. ${fmt(DATOS.mitad)}, no la vas a necesitar hasta dentro de tres meses.`,
-      "Tu banco te ofrece ponerla en un depósito a plazo al 46% anual.",
+      "Tu banco te ofrece un depósito a plazo al 51% anual. Es una tasa nominal: el interés anunciado antes de descontar la inflación.",
       {texto:`¿Qué haces con los Bs. ${fmt(DATOS.mitad)}?`, clase:"pregunta"}],
     construir:(z, listo) => elegir(z, OPC_LECCION, k => { L.datos.m1_opcion = LETRAS[k]; ganar("m1", 2, "decidiste sin miedo a equivocarte"); listo(); }) }),
 
@@ -918,8 +1104,8 @@ const PANTALLAS = [
       const precio = DATOS.mitad * Math.pow(1+DATOS.inflMes, 3);
       z.append(el("div", {class:"tarjeta"}, el("p", {}, `Lo que hoy cuesta Bs. ${fmt(DATOS.mitad)} costará unos Bs. ${fmt(precio)}.`)));
       z.append(barrasPoder([
-        ["A · Plazo al 46%", poder(0, DATOS.inflMes, DATOS.dolarMes)],
-        ["B · Cuenta al 10%", poder(1, DATOS.inflMes, DATOS.dolarMes)],
+        ["A · Plazo al 51%", poder(0, DATOS.inflMes, DATOS.dolarMes)],
+        ["B · Cuenta a la vista al 15%", poder(1, DATOS.inflMes, DATOS.dolarMes)],
         ["C · Dólares", poder(2, DATOS.inflMes, DATOS.dolarMes)],
         ["D · Comprar hoy", 1]], op));
       z.append(el("p", {class:"leyenda"}, "La barra muestra cuánto compra tu dinero comparado con hoy; la raya marca “igual que hoy”."));
@@ -934,7 +1120,7 @@ const PANTALLAS = [
 
   () => {
     const op = L.datos.m1_opcion;
-    const A = "El 46% suena alto, pero un número más grande no significa más poder adquisitivo (lo que tu dinero puede comprar). En economía se llama ilusión monetaria: mirar la cifra y no lo que esa cifra compra.";
+    const A = "El 51% suena alto, pero un número más grande no significa más poder adquisitivo (lo que tu dinero puede comprar). En economía se llama ilusión monetaria: mirar la cifra y no lo que esa cifra compra.";
     const C = "Aquí la creencia es “el dólar siempre protege”. Lo hizo durante años de devaluación fuerte. Pero cuando la tasa se mueve más lento que los precios, el dólar también pierde poder adquisitivo en Venezuela.";
     const primera = op === "C" ? C : A;
     const segunda = op === "C" ? A : C;
@@ -949,7 +1135,7 @@ const PANTALLAS = [
         z.append(btn, extra);
         z.append(el("div", {class:"tarjeta"}, el("p", {}, "Las dos tuvieron sentido en otro momento. La pregunta es qué dicen los datos hoy.")));
         listo(); },
-      concepto:["Ilusión monetaria", "Mirar la cifra (46%, 100 dólares) y no lo que esa cifra compra."] });
+      concepto:["Ilusión monetaria", "Mirar la cifra (51%, 100 dólares) y no lo que esa cifra compra.", "ilusion-monetaria"] });
   },
 
   // ---- Momento 3a · El problema
@@ -961,7 +1147,7 @@ const PANTALLAS = [
       ganar("m3a", 1, "respondiste antes de ver la teoría");
       nota(z, k === 0 ? "<b>Así es:</b> de los depósitos de gente como tú." : "<b>En realidad,</b> sale sobre todo de los depósitos de gente como tú.");
       listo(); }),
-    concepto:["Intermediación financiera", "El banco recibe depósitos, los presta y vive de la diferencia entre lo que cobra y lo que paga."] }),
+    concepto:["Intermediación financiera", "El banco recibe depósitos, los presta y vive de la diferencia entre lo que cobra y lo que paga.", "intermediacion-financiera"] }),
 
   () => pl({momento:3, burbujas:[
       "En Venezuela, el BCV obliga a los bancos a dejar inmovilizada en el propio BCV una parte enorme de lo que depositas: el encaje legal.",
@@ -980,26 +1166,26 @@ const PANTALLAS = [
       const btn = el("button", {class:"vermas", type:"button", onclick:() => { extra.classList.remove("oculto"); btn.remove(); }}, "Ver más: ¿y en otros países?");
       z.append(btn, extra);
     },
-    concepto:["Encaje legal", "La parte de tus depósitos que el banco debe dejar inmovilizada en el BCV y no puede prestar."] }),
+    concepto:["Encaje legal", "La parte de tus depósitos que el banco debe dejar inmovilizada en el BCV y no puede prestar.", "encaje-legal"] }),
 
-  () => pl({momento:3, concepto:["Política monetaria contractiva", "Frenar la cantidad de bolívares que circulan para contener la inflación y el dólar. Su costo: casi no hay crédito."], burbujas:[
+  () => pl({momento:3, concepto:["Política monetaria contractiva", "Frenar la cantidad de bolívares que circulan para contener la inflación y el dólar. Su costo: casi no hay crédito.", "politica-monetaria-contractiva"], burbujas:[
       "¿Por qué el BCV hace esto? Para frenar la inflación y la subida del dólar. Si los bancos prestan menos, circulan menos bolívares, y hay menos bolívares buscando comprar dólares.",
       "Es política monetaria contractiva. Tiene un costo: casi no hay crédito. El crédito bancario no llega al 4% del tamaño de la economía; en Colombia es cerca de 50%."] }),
 
   () => pl({momento:3, burbujas:[
-      `El BCV también fija cuánto deben pagar los bancos como mínimo al año: 10% en la cuenta a la vista, 42% en ahorro y 46% a plazo.`,
+      `El BCV también fija cuánto deben pagar los bancos como mínimo al año: 15% en la cuenta a la vista, 47% en ahorro y 51% a plazo.`,
       `Pero los precios subieron ${Math.round(DATOS.inflAnual*100)}% en los últimos doce meses (hasta octubre).`,
-      "La tasa real es lo que te pagan descontando la inflación. Mueve la inflación y mira qué pasa con un depósito al 46%."],
+      "La tasa real es el rendimiento después de descontar la inflación: muestra si tu dinero gana o pierde poder adquisitivo. Mueve la inflación y mira qué pasa con un depósito al 51%."],
     construir:(z, listo) => {
-      const cifra = el("p", {class:"cifra"});
+      const cifra = el("p", {class:"cifra", "aria-live":"polite"});
       const calc = v => { const r = (1+DATOS.plazo)/(1+v/100) - 1; cifra.textContent = `Tasa real: ${r >= 0 ? "+" : ""}${pct(r,0)} al año`; };
       calc(Math.round(DATOS.inflAnual*100));
       let movido = false;
       z.append(slider("Inflación anual", 0, 600, 1, Math.round(DATOS.inflAnual*100), v => `${v}%`, v => { calc(v); if (!movido) { movido = true; ganar("m3c", 1, "probaste la tasa real"); listo(); } }));
-      z.append(cifra, el("p", {class:"formula"}, "Tasa real = (1 + tasa) / (1 + inflación) − 1"));
-      z.append(el("div", {class:"tarjeta"}, el("p", {}, "Cuando un país mantiene a propósito tasas por debajo de la inflación y limita el crédito, los economistas lo llaman represión financiera.")));
+      z.append(cifra, el("p", {class:"formula"}, "Tasa real = (1 + tasa nominal) / (1 + inflación) − 1. Compara períodos equivalentes."));
+      z.append(el("div", {class:"tarjeta"}, el("p", {}, "Cuando las reglas mantienen los rendimientos por debajo de la inflación y restringen el crédito, los economistas lo llaman represión financiera.")));
     },
-    concepto:["Tasa real", "Lo que de verdad ganas: lo que te pagan descontando cuánto subieron los precios."] }),
+    concepto:["Tasa real", "Rendimiento después de descontar la inflación; indica si tu dinero gana o pierde poder adquisitivo.", "tasa-real"] }),
 
   () => pl({auto:true, momento:3, burbujas:[
       "Si casi no pueden prestar y pagan intereses cada vez más altos, ¿de qué viven los bancos?",
@@ -1010,7 +1196,7 @@ const PANTALLAS = [
       ganar("m3d", 1, "razonaste quién carga el riesgo");
       nota(z, k === 0 ? "<b>Exacto:</b> el riesgo lo cargas tú, no el banco." : "<b>En realidad lo cargas tú:</b> si el bolívar cae, tu deuda sube y el banco no pierde.");
       listo(); }),
-    concepto:["Crédito indexado (UVC)", "Una deuda que se ajusta con el tipo de cambio: si el bolívar cae, lo que debes sube."] }),
+    concepto:["Crédito indexado (UVC)", "Una deuda que se ajusta con el tipo de cambio: si el bolívar cae, lo que debes sube.", "credito-indexado-uvc"] }),
 
   // ---- Momento 3b · El impacto
   () => pl({auto:true, momento:3, burbujas:["Esto produce cuatro efectos sobre tu dinero que quizás vives sin notarlos.", {texto:"¿Cuál vives más?", clase:"pregunta"}],
@@ -1026,13 +1212,13 @@ const PANTALLAS = [
         nota(z, `<b>${efectos[k][0]}:</b> ${efectos[k][1]}`);
         listo(); });
     },
-    concepto:["Descalce de monedas", "Ganar en una moneda y gastar en otra: cada variación del tipo de cambio afecta tu presupuesto."] }),
+    concepto:["Descalce de monedas", "Ganar en una moneda y gastar en otra: cada variación del tipo de cambio afecta tu presupuesto.", "descalce-de-monedas"] }),
 
   () => pl({momento:3, saltable:true, burbujas:[
       "Un dato más, opcional: el costo escondido del crédito informal.",
       "Un prestamista que cobra 10% al mes en dólares parece poco. Mueve el interés mensual y mira cuánto pagas en un año."],
     construir:(z, listo) => {
-      const cifra = el("p", {class:"cifra"});
+      const cifra = el("p", {class:"cifra", "aria-live":"polite"});
       const calc = v => { const a = Math.pow(1+v/100, 12) - 1; cifra.textContent = `${pct(a,0)} al año`; };
       calc(10);
       z.append(slider("Interés mensual", 2, 20, 1, 10, v => `${v}%`, v => calc(v)), cifra,
@@ -1053,7 +1239,7 @@ const PANTALLAS = [
   () => pl({momento:3, burbujas:["Ahora tú mueves el mercado.", "Cambia cuánto suben los precios y cuánto sube el dólar oficial cada mes, y mira cuál opción conserva más poder adquisitivo en tres meses."],
     construir:(z, listo) => {
       let i = DATOS.inflMes, d = DATOS.dolarMes; const vistos = new Set();
-      const vals = () => [["A · Plazo al 46%", poder(0,i,d)], ["B · Cuenta al 10%", poder(1,i,d)], ["C · Dólares", poder(2,i,d)], ["D · Comprar hoy", 1]];
+      const vals = () => [["A · Plazo al 51%", poder(0,i,d)], ["B · Cuenta al 15%", poder(1,i,d)], ["C · Dólares", poder(2,i,d)], ["D · Comprar hoy", 1]];
       const barras = barrasPoder(vals(), -1);
       const registrar = () => { vistos.add(`${i}-${d}`); L.datos.m3_simulaciones = vistos.size;
         if (vistos.size >= 3) { ganar("m3f", 1, "probaste varios escenarios"); listo(); } };
@@ -1064,7 +1250,7 @@ const PANTALLAS = [
         el("p", {class:"leyenda"}, "Prueba al menos tres combinaciones."));
     } }),
 
-  () => pl({momento:3, boton:"Decidir otra vez", concepto:["No hay refugio fijo", "Lo que conserva tu poder adquisitivo depende de comparar precios, tasas y tipo de cambio en el mismo período."], burbujas:[
+  () => pl({momento:3, boton:"Decidir otra vez", concepto:["No hay refugio fijo", "Lo que conserva tu poder adquisitivo depende de comparar precios, tasas y tipo de cambio en el mismo período.", "no-hay-refugio-fijo"], burbujas:[
       "Cuando la tasa de cambio se queda quieta y los precios suben, ni el banco ni el dólar te protegen del todo.",
       "Cuando la tasa salta más que los precios, el dólar vuelve a ganar.",
       "No hay un refugio fijo. Hay variables que cambian, y se pueden analizar."] }),
