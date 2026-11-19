@@ -389,12 +389,12 @@ const MATERIAS = [
 
 // Resultado: por qué empieza la ruta en cada materia. {N} = decisiones donde pesó; {T} = decisiones que contaron.
 const POR_QUE = [
-  { con:"En {N} de tus {T} decisiones pesó más la dinámica de la tasa de cambio, los precios y el bolívar. Por ahí empezamos: entender esas variables hace más sólidas todas las demás decisiones.",
-    sin:"En tus decisiones pesó más la dinámica de la tasa de cambio, los precios y el bolívar. Por ahí empezamos: entender esas variables hace más sólidas todas las demás decisiones." },
-  { con:"En {N} de tus {T} decisiones, la duda estuvo en qué hacer con el excedente: en qué instrumento colocarlo, cuánto riesgo asumir y cómo diversificarlo. Por ahí empezamos.",
-    sin:"En tus decisiones, la duda estuvo en qué hacer con el excedente: en qué instrumento colocarlo, cuánto riesgo asumir y cómo diversificarlo. Por ahí empezamos." },
-  { con:"En {N} de tus {T} decisiones pesaron más los hábitos que dejó la crisis que los datos del momento. Por ahí empezamos: no para descartarlos, sino para evaluar cuáles todavía te sirven.",
-    sin:"En tus decisiones pesaron más los hábitos que dejó la crisis que los datos del momento. Por ahí empezamos: no para descartarlos, sino para evaluar cuáles todavía te sirven." }
+  { con:"En {N} de las {T} decisiones evaluadas apareció una brecha más marcada en cómo influyen el tipo de cambio, los precios y el bolívar. Por eso tu ruta empieza por Economía: entender esas variables ayuda a comparar opciones.",
+    sin:"Tu mayor oportunidad de aprendizaje está en cómo influyen el tipo de cambio, los precios y el bolívar. Por eso tu ruta empieza por Economía: entender esas variables ayuda a comparar opciones." },
+  { con:"En {N} de las {T} decisiones evaluadas apareció una brecha más marcada al decidir qué hacer con el excedente: comparar rendimiento, riesgo y liquidez (qué tan rápido puedes disponer del dinero). Por eso tu ruta empieza por Finanzas.",
+    sin:"Tu mayor oportunidad de aprendizaje está en decidir qué hacer con el excedente: comparar rendimiento, riesgo y liquidez (qué tan rápido puedes disponer del dinero). Por eso tu ruta empieza por Finanzas." },
+  { con:"En {N} de las {T} decisiones evaluadas apareció una brecha más marcada entre hábitos aprendidos durante la crisis y los datos disponibles hoy. Por eso tu ruta empieza por Conducta y sociedad: revisaremos qué hábitos siguen siendo útiles.",
+    sin:"Tu mayor oportunidad de aprendizaje está en revisar cómo los hábitos aprendidos durante la crisis influyen en tus decisiones actuales y cuándo siguen siendo útiles." }
 ];
 const ELECCION_C3 = "Respondiste el cálculo de los porcentajes con mucha seguridad.";
 const CREENCIAS = {
@@ -752,22 +752,22 @@ function resultado(){
 
   const linea = (etiqueta, texto) => el("p", {}, el("b", {}, etiqueta), texto);
   const creencias = estado.detalleCreencias.length ? el("section", {class:"creencias"},
-    el("h2", {}, "Creencias heredadas que vamos a revisar contigo"),
-    el("p", {class:"sublema"}, "Ninguna es un error. Son atajos para decidir (heurísticas) que aprendimos en años difíciles."),
+    el("h2", {}, "Patrones de decisión que vamos a revisar contigo"),
+    el("p", {class:"sublema"}, "Ninguna es un error. Son heurísticas: atajos mentales que aprendimos en años difíciles y que pueden seguir influyendo en tus decisiones."),
     ...estado.detalleCreencias.slice(0,3).map(({dogma, eleccion}) => el("div", {class:"tarjeta"},
       el("h3", {}, dogma),
       linea("Lo que elegiste:", eleccion === ELECCION_C3 ? eleccion : `«${eleccion}»`),
       linea("Por qué tiene sentido:", CREENCIAS[dogma].porque),
       linea("Lo que vamos a revisar:", CREENCIAS[dogma].revisar))))
     : el("section", {class:"creencias"}, el("div", {class:"tarjeta"},
-      el("p", {}, "No apareció ninguna creencia fuerte en tus decisiones. Es una buena base: tu ruta se va a enfocar más en afinar el análisis de las cifras que en revisar hábitos.")));
+      el("p", {}, "En tus respuestas no apareció una creencia marcada como activa. Eso no significa que no tengas hábitos que revisar: tu ruta empezará por fortalecer el análisis de cifras y decisiones.")));
 
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
     el("h1", {class:"titulo"}, `Tu ruta empieza por ${MATERIAS[primera].nombre.toLowerCase()}.`),
     el("p", {class:"porque"}, porque),
     creencias,
-    el("p", {class:"sublema", style:"margin-top:32px"}, "Esta es tu mezcla: cuánto de cada materia va a tener tu ruta. Ninguna baja de 20%, para que no te saltes nada."),
+    el("p", {class:"sublema", style:"margin-top:32px"}, "Esta es la distribución de tu ruta: el porcentaje de actividades dedicado a cada materia. Ninguna baja de 20%, para que trabajes las tres."),
     el("div", {class:"mezcla"}, ...filas),
     el("p", {class:"invitacion"}, "Tu primera lección: Tasas, bancos y tu bolívar."),
     el("div", {class:"acciones"}, el("button", {class:"btn", type:"button", onclick:irALeccion}, "Empezar mi primera lección"))
@@ -826,7 +826,7 @@ function cuenta(){
 const DATOS = {
   sueldo:91575, mitad:45787.5, tasaBCV:"915,75", tasaFecha:"noviembre 2026", plazo:0.51, cuenta:0.15, ahorro:0.47,
   inflMes:0.062, inflAnual:3.769, dolarMes:0.035, costoCambio:0.99,
-  encajeVista:73, encajePlazo:50, fuente:"Cifras de referencia para noviembre de 2026: tasas mínimas de depósitos 15% vista, 47% ahorro y 51% plazo; inflación de octubre de 2026 (mensual 6,2%; doce meses 376,9%). Encaje legal: 73% vista/ahorro y 50% plazo."
+  encajeVista:73, encajePlazo:50, fuente:"Tasas mínimas vigentes desde el 1/11/2026: 15% depósitos a la vista (salvo sector público), 47% ahorro y 51% plazo. Resolución BCV 26-10-01, Gaceta Oficial 43.489 del 28/10/2026. Inflación de octubre de 2026: mensual 6,2%; doce meses 376,9%. Encaje: 73% vista/ahorro y 50% plazo."
 };
 const fmt = n => n.toLocaleString("es-VE", {maximumFractionDigits:0});
 const pct = (n, d=1) => (n*100).toLocaleString("es-VE", {minimumFractionDigits:d, maximumFractionDigits:d}) + "%";
@@ -838,7 +838,7 @@ const poder = (op, i, d) => {
   return 1;
 };
 const OPC_LECCION = ["Los coloco a plazo. 51% es más de lo que rinde casi cualquier otra opción.",
-  "Los dejo en la cuenta. Paga 15% y tengo liquidez: puedo usarlos cuando quiera.",
+  "Los dejo en una cuenta a la vista. Paga 15% anual y tengo liquidez: puedo disponer del dinero cuando lo necesite.",
   "Los cambio hoy a dólares y los guardo hasta que los necesite.",
   "Compro hoy cosas que sé que voy a usar en esos tres meses."];
 const OPC_CORTAS = ["Plazo al 51%", "Cuenta al 15%", "Dólares", "Comprar hoy lo que usaré"];
@@ -971,7 +971,7 @@ const PANTALLAS = [
       ...(grupoMoneda(estado.perfil.moneda) === "usd" ? [`Tú cobras en ${MONEDA_TEXTO[estado.perfil.moneda]}, pero igual pagas en bolívares. Esta lección parte de alguien que cobra en bolívares, porque explica cómo funciona el bolívar que usas cada día.`] : []),
       `Imagina que hoy te depositaron Bs. ${fmt(DATOS.sueldo)}. A la tasa BCV del ${DATOS.tasaFecha} (${DATOS.tasaBCV} Bs por dólar) son unos 100 dólares.`,
       `La mitad, Bs. ${fmt(DATOS.mitad)}, no la vas a necesitar hasta dentro de tres meses.`,
-      "Tu banco te ofrece ponerla en un depósito a plazo al 51% anual.",
+      "Tu banco te ofrece un depósito a plazo al 51% anual. Es una tasa nominal: el interés anunciado antes de descontar la inflación.",
       {texto:`¿Qué haces con los Bs. ${fmt(DATOS.mitad)}?`, clase:"pregunta"}],
     construir:(z, listo) => elegir(z, OPC_LECCION, k => { L.datos.m1_opcion = LETRAS[k]; ganar("m1", 2, "decidiste sin miedo a equivocarte"); listo(); }) }),
 
@@ -992,7 +992,7 @@ const PANTALLAS = [
       z.append(el("div", {class:"tarjeta"}, el("p", {}, `Lo que hoy cuesta Bs. ${fmt(DATOS.mitad)} costará unos Bs. ${fmt(precio)}.`)));
       z.append(barrasPoder([
         ["A · Plazo al 51%", poder(0, DATOS.inflMes, DATOS.dolarMes)],
-        ["B · Cuenta al 15%", poder(1, DATOS.inflMes, DATOS.dolarMes)],
+        ["B · Cuenta a la vista al 15%", poder(1, DATOS.inflMes, DATOS.dolarMes)],
         ["C · Dólares", poder(2, DATOS.inflMes, DATOS.dolarMes)],
         ["D · Comprar hoy", 1]], op));
       z.append(el("p", {class:"leyenda"}, "La barra muestra cuánto compra tu dinero comparado con hoy; la raya marca “igual que hoy”."));
@@ -1062,14 +1062,14 @@ const PANTALLAS = [
   () => pl({momento:3, burbujas:[
       `El BCV también fija cuánto deben pagar los bancos como mínimo al año: 15% en la cuenta a la vista, 47% en ahorro y 51% a plazo.`,
       `Pero los precios subieron ${Math.round(DATOS.inflAnual*100)}% en los últimos doce meses (hasta octubre).`,
-      "La tasa real es lo que te pagan descontando la inflación. Mueve la inflación y mira qué pasa con un depósito al 51%."],
+      "La tasa real es el rendimiento después de descontar la inflación: muestra si tu dinero gana o pierde poder adquisitivo. Mueve la inflación y mira qué pasa con un depósito al 51%."],
     construir:(z, listo) => {
       const cifra = el("p", {class:"cifra", "aria-live":"polite"});
       const calc = v => { const r = (1+DATOS.plazo)/(1+v/100) - 1; cifra.textContent = `Tasa real: ${r >= 0 ? "+" : ""}${pct(r,0)} al año`; };
       calc(Math.round(DATOS.inflAnual*100));
       let movido = false;
       z.append(slider("Inflación anual", 0, 600, 1, Math.round(DATOS.inflAnual*100), v => `${v}%`, v => { calc(v); if (!movido) { movido = true; ganar("m3c", 1, "probaste la tasa real"); listo(); } }));
-      z.append(cifra, el("p", {class:"formula"}, "Tasa real = (1 + tasa) / (1 + inflación) − 1"));
+      z.append(cifra, el("p", {class:"formula"}, "Tasa real = (1 + tasa nominal) / (1 + inflación) − 1. Compara períodos equivalentes."));
       z.append(el("div", {class:"tarjeta"}, el("p", {}, "Cuando un país mantiene a propósito tasas por debajo de la inflación y limita el crédito, los economistas lo llaman represión financiera.")));
     },
     concepto:["Tasa real", "Lo que de verdad ganas: lo que te pagan descontando cuánto subieron los precios."] }),
