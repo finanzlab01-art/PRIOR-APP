@@ -244,6 +244,16 @@ textarea:focus{border-color:var(--principal)}
   *{animation:none !important; transition:none !important}
   .escena .sol-grande{transform:translate(-50%,0)}
 }
+.barra-app{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.btn-biblioteca{border:1.5px solid var(--borde);border-radius:999px;background:var(--tarjeta);color:var(--principal);padding:8px 13px;min-height:42px;font-size:13px;font-weight:600}
+.concepto-acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.concepto-acciones button{border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;padding:7px 11px;min-height:38px;font:600 13px Inter,sans-serif}
+.biblioteca-lista{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.biblioteca-item{background:var(--tarjeta);border:1px solid var(--arena);border-radius:12px;padding:16px}
+.biblioteca-item h2{font-size:18px;line-height:1.3;margin:0 0 8px;color:var(--principal)}
+.biblioteca-item p{margin:0;color:var(--texto2)}
+.biblioteca-item .meta{font-size:12px;margin-top:10px}
+.biblioteca-vacia{padding:20px;border:1px dashed var(--borde);border-radius:12px;color:var(--texto2);margin-top:18px}
 </style>
 </head>
 <body>
@@ -486,6 +496,16 @@ async function guardarLeccion(){
 const estado = { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{} };
 const app = document.getElementById("app");
 const reducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const CLAVE_BIBLIOTECA = "prior_biblioteca_v1";
+function leerBiblioteca(){try{const v=JSON.parse(localStorage.getItem(CLAVE_BIBLIOTECA)||"[]");return Array.isArray(v)?v:[];}catch{return [];}}
+function guardarBiblioteca(items){try{localStorage.setItem(CLAVE_BIBLIOTECA,JSON.stringify(items));return true;}catch{return false;}}
+function guardarConcepto(concepto){const items=leerBiblioteca();if(!items.some(x=>x.nombre===concepto[0]))items.unshift({nombre:concepto[0],definicion:concepto[1],guardado:new Date().toISOString()});return guardarBiblioteca(items);}
+function biblioteca(){
+  registrarPaso("biblioteca");const items=leerBiblioteca();const lista=el("div",{class:"biblioteca-lista"});
+  if(!items.length)lista.append(el("div",{class:"biblioteca-vacia"},"Todavía no has guardado conceptos. Durante una lección, toca «Guardar en mi biblioteca» para conservar una idea."));
+  else items.forEach((item,i)=>{const tarjeta=el("article",{class:"biblioteca-item"});tarjeta.append(el("h2",{},item.nombre),el("p",{},item.definicion),el("p",{class:"meta"},"Guardado en este dispositivo"),el("button",{class:"btn texto",type:"button",onclick:()=>{const a=leerBiblioteca();a.splice(i,1);guardarBiblioteca(a);biblioteca();}},"Quitar de mi biblioteca"));lista.append(tarjeta);});
+  pantalla(el("div",{class:"barra-app"},el("span",{class:"marca"},"PRIOR"),el("button",{class:"btn-biblioteca",type:"button",onclick:()=>final()},"Volver")),el("h1",{class:"titulo"},"Mi biblioteca"),el("p",{class:"sublema"},"Conceptos guardados en este dispositivo. Puedes usarla sin crear una cuenta."),lista);
+}
 
 /* ---------- Utilidades ---------- */
 const el = (tag, attrs={}, ...hijos) => {
@@ -862,7 +882,7 @@ function pl({momento, burbujas, construir, boton="Seguir", saltable=false, conce
   if (auto) seguir.classList.add("oculto");
   if (saltable) acciones.append(el("button", {class:"btn texto", type:"button", onclick:() => { L.paso++; PANTALLAS[L.paso](); }}, "Saltar esta parte"));
   pantalla(
-    el("div", {class:"cabecera"}, el("span", {class:"marca"}, "PRIOR"), el("span", {class:"criterio-total"}, `${L.criterio} Criterio`)),
+    el("div", {class:"barra-app"}, el("span", {class:"marca"}, "PRIOR"), el("div",{},el("button",{class:"btn-biblioteca",type:"button",onclick:biblioteca},"Mi biblioteca"),el("span",{class:"criterio-total"}, `${L.criterio} Criterio`))),
     horizonte(L.paso+1, total),
     el("div", {class:"momento"}, `Momento ${momento} de 5 · ${MOMENTOS[momento-1]}`),
     guia, zona, acciones
@@ -886,7 +906,12 @@ function pl({momento, burbujas, construir, boton="Seguir", saltable=false, conce
     }
     if (concepto && !zona.querySelector(".concepto")) setTimeout(() => {
       if (zona.querySelector(".concepto")) return;
-      zona.append(el("div", {class:"concepto"}, el("small", {}, "La idea"), el("h3", {}, concepto[0]), el("p", {}, concepto[1])));
+      const caja=el("div",{class:"concepto"},el("small",{},"La idea"),el("h3",{},concepto[0]),el("p",{},concepto[1]));
+      const acciones=el("div",{class:"concepto-acciones"});
+      const guardar=el("button",{type:"button"},"Guardar en mi biblioteca");
+      guardar.addEventListener("click",()=>{const ok=guardarConcepto(concepto);guardar.textContent=ok?"Guardado ✓":"No se pudo guardar";guardar.disabled=ok;});
+      const consultar=el("button",{type:"button"},"Ver mi biblioteca");consultar.addEventListener("click",biblioteca);
+      acciones.append(guardar,consultar);caja.append(acciones);zona.append(caja);
     }, 10);
     if (concepto && !L.conceptos.some(c => c[0] === concepto[0])) L.conceptos.push(concepto);
   };
