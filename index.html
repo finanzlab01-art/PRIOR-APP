@@ -504,7 +504,7 @@ function biblioteca(){
   registrarPaso("biblioteca");const items=leerBiblioteca();const lista=el("div",{class:"biblioteca-lista"});
   if(!items.length)lista.append(el("div",{class:"biblioteca-vacia"},"Todavía no has guardado conceptos. Durante una lección, toca «Guardar en mi biblioteca» para conservar una idea."));
   else items.forEach((item,i)=>{const tarjeta=el("article",{class:"biblioteca-item"});tarjeta.append(el("h2",{},item.nombre),el("p",{},item.definicion),el("p",{class:"meta"},"Guardado en este dispositivo"),el("button",{class:"btn texto",type:"button",onclick:()=>{const a=leerBiblioteca();a.splice(i,1);guardarBiblioteca(a);biblioteca();}},"Quitar de mi biblioteca"));lista.append(tarjeta);});
-  pantalla(el("div",{class:"barra-app"},el("span",{class:"marca"},"PRIOR"),el("button",{class:"btn-biblioteca",type:"button",onclick:()=>final()},"Volver")),el("h1",{class:"titulo"},"Mi biblioteca"),el("p",{class:"sublema"},"Conceptos guardados en este dispositivo. Puedes usarla sin crear una cuenta."),lista);
+  pantalla(el("div",{class:"barra-app"},el("span",{class:"marca"},"PRIOR"),el("button",{class:"btn-biblioteca",type:"button",onclick:()=>PANTALLAS[L.paso]()},"Volver")),el("h1",{class:"titulo"},"Mi biblioteca"),el("p",{class:"sublema"},"Conceptos guardados en este dispositivo. Puedes usarla sin crear una cuenta."),lista);
 }
 
 /* ---------- Utilidades ---------- */
