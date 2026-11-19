@@ -44,6 +44,18 @@ test('diagnóstico v5 y guardado local de un concepto', async ({ page }) => {
   await page.getByRole('button', { name: 'Ver mi biblioteca' }).click();
   await expect(page.getByRole('heading', { name: 'Mi biblioteca' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toBeVisible();
+
+  // Quitar y volver a guardar el mismo concepto no debe crear duplicados.
+  await page.getByRole('button', { name: 'Quitar de mi biblioteca' }).click();
+  await expect(page.getByText(/Todavía no has guardado conceptos/)).toBeVisible();
+  await page.getByRole('button', { name: 'Volver', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toBeVisible();
+  await page.getByRole('button', { name: 'Guardar en mi biblioteca' }).click();
+  await page.getByRole('button', { name: 'Ver mi biblioteca' }).click();
+  await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toHaveCount(1);
+  const guardados = await page.evaluate(() => JSON.parse(localStorage.getItem('prior_biblioteca_v1') || '[]'));
+  expect(guardados).toHaveLength(1);
+  expect(guardados[0].id).toBe('ilusion-monetaria');
 });
 
 test('la portada cabe en el viewport sin desplazamiento horizontal', async ({ page }) => {
