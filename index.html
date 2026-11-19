@@ -824,9 +824,9 @@ function cuenta(){
 /* ================= Lección E1: Tasas, bancos y tu bolívar (guion v2, 13 oct 2026) ================= */
 // Cifras que caducan: en la app real viven en una tabla editable de Supabase.
 const DATOS = {
-  sueldo:91575, mitad:45787.5, tasaBCV:"915,75", tasaFecha:"17 nov 2026", plazo:0.46, cuenta:0.10, ahorro:0.42,
+  sueldo:91575, mitad:45787.5, tasaBCV:"915,75", tasaFecha:"noviembre 2026", plazo:0.51, cuenta:0.15, ahorro:0.47,
   inflMes:0.062, inflAnual:3.769, dolarMes:0.035, costoCambio:0.99,
-  encajeVista:73, encajePlazo:50, fuente:"Cifras ilustrativas con datos del BCV: tasa oficial del 17 de noviembre de 2026; inflación de octubre de 2026 (mensual 6,2%; doce meses 376,9%)."
+  encajeVista:73, encajePlazo:50, fuente:"Cifras de referencia para noviembre de 2026: tasas mínimas de depósitos 15% vista, 47% ahorro y 51% plazo; inflación de octubre de 2026 (mensual 6,2%; doce meses 376,9%). Encaje legal: 73% vista/ahorro y 50% plazo."
 };
 const fmt = n => n.toLocaleString("es-VE", {maximumFractionDigits:0});
 const pct = (n, d=1) => (n*100).toLocaleString("es-VE", {minimumFractionDigits:d, maximumFractionDigits:d}) + "%";
@@ -837,16 +837,16 @@ const poder = (op, i, d) => {
   if (op === 2) return Math.pow(1+d, 3) * DATOS.costoCambio / c;
   return 1;
 };
-const OPC_LECCION = ["Los coloco a plazo. 46% es más de lo que rinde casi cualquier otra opción.",
-  "Los dejo en la cuenta. Paga 10% y tengo liquidez: puedo usarlos cuando quiera.",
+const OPC_LECCION = ["Los coloco a plazo. 51% es más de lo que rinde casi cualquier otra opción.",
+  "Los dejo en la cuenta. Paga 15% y tengo liquidez: puedo usarlos cuando quiera.",
   "Los cambio hoy a dólares y los guardo hasta que los necesite.",
   "Compro hoy cosas que sé que voy a usar en esos tres meses."];
-const OPC_CORTAS = ["Plazo al 46%", "Cuenta al 10%", "Dólares", "Comprar hoy lo que usaré"];
+const OPC_CORTAS = ["Plazo al 51%", "Cuenta al 15%", "Dólares", "Comprar hoy lo que usaré"];
 // Pregunta de predicción según lo que eligió la persona en el momento 1.
 const PREDICCION = [
-  ["El banco te paga 46% al año. En octubre los precios subieron 6,2% en un solo mes.",
+  ["El banco te paga 51% al año. En octubre los precios subieron 6,2% en un solo mes.",
    {texto:"En tres meses, ¿tus bolívares a plazo compran más o menos que hoy?", clase:"pregunta"}],
-  ["La cuenta te paga 10% al año. En octubre los precios subieron 6,2% en un solo mes.",
+  ["La cuenta te paga 15% al año. En octubre los precios subieron 6,2% en un solo mes.",
    {texto:"En tres meses, ¿tus bolívares en la cuenta compran más o menos que hoy?", clase:"pregunta"}],
   ["En octubre el dólar oficial subió cerca de 3,5% y los precios subieron 6,2%, en un solo mes.",
    {texto:"En tres meses, ¿tus dólares compran más o menos aquí que hoy?", clase:"pregunta"}],
@@ -971,7 +971,7 @@ const PANTALLAS = [
       ...(grupoMoneda(estado.perfil.moneda) === "usd" ? [`Tú cobras en ${MONEDA_TEXTO[estado.perfil.moneda]}, pero igual pagas en bolívares. Esta lección parte de alguien que cobra en bolívares, porque explica cómo funciona el bolívar que usas cada día.`] : []),
       `Imagina que hoy te depositaron Bs. ${fmt(DATOS.sueldo)}. A la tasa BCV del ${DATOS.tasaFecha} (${DATOS.tasaBCV} Bs por dólar) son unos 100 dólares.`,
       `La mitad, Bs. ${fmt(DATOS.mitad)}, no la vas a necesitar hasta dentro de tres meses.`,
-      "Tu banco te ofrece ponerla en un depósito a plazo al 46% anual.",
+      "Tu banco te ofrece ponerla en un depósito a plazo al 51% anual.",
       {texto:`¿Qué haces con los Bs. ${fmt(DATOS.mitad)}?`, clase:"pregunta"}],
     construir:(z, listo) => elegir(z, OPC_LECCION, k => { L.datos.m1_opcion = LETRAS[k]; ganar("m1", 2, "decidiste sin miedo a equivocarte"); listo(); }) }),
 
@@ -991,8 +991,8 @@ const PANTALLAS = [
       const precio = DATOS.mitad * Math.pow(1+DATOS.inflMes, 3);
       z.append(el("div", {class:"tarjeta"}, el("p", {}, `Lo que hoy cuesta Bs. ${fmt(DATOS.mitad)} costará unos Bs. ${fmt(precio)}.`)));
       z.append(barrasPoder([
-        ["A · Plazo al 46%", poder(0, DATOS.inflMes, DATOS.dolarMes)],
-        ["B · Cuenta al 10%", poder(1, DATOS.inflMes, DATOS.dolarMes)],
+        ["A · Plazo al 51%", poder(0, DATOS.inflMes, DATOS.dolarMes)],
+        ["B · Cuenta al 15%", poder(1, DATOS.inflMes, DATOS.dolarMes)],
         ["C · Dólares", poder(2, DATOS.inflMes, DATOS.dolarMes)],
         ["D · Comprar hoy", 1]], op));
       z.append(el("p", {class:"leyenda"}, "La barra muestra cuánto compra tu dinero comparado con hoy; la raya marca “igual que hoy”."));
@@ -1007,7 +1007,7 @@ const PANTALLAS = [
 
   () => {
     const op = L.datos.m1_opcion;
-    const A = "El 46% suena alto, pero un número más grande no significa más poder adquisitivo (lo que tu dinero puede comprar). En economía se llama ilusión monetaria: mirar la cifra y no lo que esa cifra compra.";
+    const A = "El 51% suena alto, pero un número más grande no significa más poder adquisitivo (lo que tu dinero puede comprar). En economía se llama ilusión monetaria: mirar la cifra y no lo que esa cifra compra.";
     const C = "Aquí la creencia es “el dólar siempre protege”. Lo hizo durante años de devaluación fuerte. Pero cuando la tasa se mueve más lento que los precios, el dólar también pierde poder adquisitivo en Venezuela.";
     const primera = op === "C" ? C : A;
     const segunda = op === "C" ? A : C;
@@ -1022,7 +1022,7 @@ const PANTALLAS = [
         z.append(btn, extra);
         z.append(el("div", {class:"tarjeta"}, el("p", {}, "Las dos tuvieron sentido en otro momento. La pregunta es qué dicen los datos hoy.")));
         listo(); },
-      concepto:["Ilusión monetaria", "Mirar la cifra (46%, 100 dólares) y no lo que esa cifra compra."] });
+      concepto:["Ilusión monetaria", "Mirar la cifra (51%, 100 dólares) y no lo que esa cifra compra."] });
   },
 
   // ---- Momento 3a · El problema
@@ -1060,9 +1060,9 @@ const PANTALLAS = [
       "Es política monetaria contractiva. Tiene un costo: casi no hay crédito. El crédito bancario no llega al 4% del tamaño de la economía; en Colombia es cerca de 50%."] }),
 
   () => pl({momento:3, burbujas:[
-      `El BCV también fija cuánto deben pagar los bancos como mínimo al año: 10% en la cuenta a la vista, 42% en ahorro y 46% a plazo.`,
+      `El BCV también fija cuánto deben pagar los bancos como mínimo al año: 15% en la cuenta a la vista, 47% en ahorro y 51% a plazo.`,
       `Pero los precios subieron ${Math.round(DATOS.inflAnual*100)}% en los últimos doce meses (hasta octubre).`,
-      "La tasa real es lo que te pagan descontando la inflación. Mueve la inflación y mira qué pasa con un depósito al 46%."],
+      "La tasa real es lo que te pagan descontando la inflación. Mueve la inflación y mira qué pasa con un depósito al 51%."],
     construir:(z, listo) => {
       const cifra = el("p", {class:"cifra", "aria-live":"polite"});
       const calc = v => { const r = (1+DATOS.plazo)/(1+v/100) - 1; cifra.textContent = `Tasa real: ${r >= 0 ? "+" : ""}${pct(r,0)} al año`; };
@@ -1126,7 +1126,7 @@ const PANTALLAS = [
   () => pl({momento:3, burbujas:["Ahora tú mueves el mercado.", "Cambia cuánto suben los precios y cuánto sube el dólar oficial cada mes, y mira cuál opción conserva más poder adquisitivo en tres meses."],
     construir:(z, listo) => {
       let i = DATOS.inflMes, d = DATOS.dolarMes; const vistos = new Set();
-      const vals = () => [["A · Plazo al 46%", poder(0,i,d)], ["B · Cuenta al 10%", poder(1,i,d)], ["C · Dólares", poder(2,i,d)], ["D · Comprar hoy", 1]];
+      const vals = () => [["A · Plazo al 51%", poder(0,i,d)], ["B · Cuenta al 15%", poder(1,i,d)], ["C · Dólares", poder(2,i,d)], ["D · Comprar hoy", 1]];
       const barras = barrasPoder(vals(), -1);
       const registrar = () => { vistos.add(`${i}-${d}`); L.datos.m3_simulaciones = vistos.size;
         if (vistos.size >= 3) { ganar("m3f", 1, "probaste varios escenarios"); listo(); } };
