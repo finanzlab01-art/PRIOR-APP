@@ -601,7 +601,14 @@ function biblioteca(){
   const estado=el("p",{class:"aviso-demo",role:"status"},usuario?
     (estadoSyncBiblioteca==="sincronizada"?"Tu biblioteca está sincronizada con tu cuenta.":estadoSyncBiblioteca==="pendiente"?"Tus cambios siguen guardados en este dispositivo; falta sincronizarlos.":estadoSyncBiblioteca==="sincronizando"?"Sincronizando tu biblioteca…":"Biblioteca guardada en tu cuenta."):"Tu biblioteca está guardada en este dispositivo.");
   const reintentar=usuario&&estadoSyncBiblioteca==="pendiente"?el("button",{class:"btn secundario",type:"button",onclick:async()=>{await sincronizarBiblioteca(usuario);biblioteca();}},"Reintentar sincronización"):null;
-  pantalla(el("div",{class:"barra-app"},el("span",{class:"marca"},"PRIOR"),el("button",{class:"btn-biblioteca",type:"button",onclick:()=>PANTALLAS[L.paso]()},"Volver")),
+  const salir=usuario?el("button",{class:"btn-biblioteca",type:"button",onclick:async()=>{
+    const {error}=await sb.auth.signOut();
+    if(error){estadoSyncBiblioteca="pendiente";biblioteca();return;}
+    usuario=null;estadoSyncBiblioteca="local";biblioteca();
+  }},"Cerrar sesión"):null;
+  pantalla(el("div",{class:"barra-app"},el("span",{class:"marca"},"PRIOR"),
+    el("div",{style:"display:flex;gap:8px;align-items:center;flex-wrap:wrap"},
+      salir,el("button",{class:"btn-biblioteca",type:"button",onclick:()=>PANTALLAS[L.paso]()},"Volver"))),
     el("h1",{class:"titulo"},"Mi biblioteca"),
     el("p",{class:"sublema"},usuario?"Conceptos guardados en tu cuenta y disponibles al iniciar sesión.":"Conceptos guardados en este dispositivo. Puedes usarla sin crear una cuenta."),
     estado,reintentar,lista);
