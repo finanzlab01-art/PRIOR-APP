@@ -746,7 +746,7 @@ const ITEMS_DIAGNOSTICO = [
   {id:"D8", texto:"Cuando una decisión financiera me funciona una vez, suelo repetirla sin volver a comparar alternativas.", materia:2, dogma:"Sé manejar mi dinero", invertida:false},
   {id:"D9", texto:"Antes de decidir qué hacer con mi dinero, comparo lo que puede rendir con lo que suben los precios.", materia:0, dogma:"Sé manejar mi dinero", invertida:true},
   {id:"D10", texto:"Tengo claro cómo repartir mi dinero entre distintas opciones para no depender de una sola.", materia:1, dogma:"El efectivo como refugio, o todo a una sola apuesta", invertida:true},
-  {id:"D11", texto:"Suelo revisar los datos y los costos antes de tomar una decisión financiera.", materia:0, dogma:"Gastar todo apenas cobras, por si acaso", invertida:true}
+  {id:"D11", texto:"Suelo revisar los datos y los costos antes de tomar una decisión financiera.", materia:0, dogma:"Sé manejar mi dinero", invertida:true}
 ];
 function diagnosticoRapido(){
   registrarPaso("diagnostico_escala");
@@ -765,7 +765,7 @@ function diagnosticoRapido(){
       el("p",{class:"escala-enunciado"},(i+1)+". "+item.texto),
       el("div",{class:"escala-leyenda"},el("span",{},"Nada de acuerdo"),el("span",{},"Muy de acuerdo")),puntos);
     for(let valor=1;valor<=5;valor++){
-      const p=el("button",{class:"escala-punto",type:"button","aria-pressed":"false","aria-label":valor+" de 5"},String(valor));
+      const p=el("button",{class:"escala-punto",type:"button","aria-pressed":"false","aria-label":valor+" de 5"});
       p.addEventListener("click",()=>{
         respuestas[i]=valor;
         [...puntos.children].forEach((n,k)=>n.setAttribute("aria-pressed",String(k+1===valor)));
@@ -788,7 +788,7 @@ function diagnosticoRapido(){
       if(!intensidadPorCreencia[item.dogma] || intensidadPorCreencia[item.dogma].riesgo<riesgo)
         intensidadPorCreencia[item.dogma]={riesgo:riesgo,eleccion:item.texto};
     });
-    Object.entries(intensidadPorCreencia).forEach(([dogma,dato])=>{
+    Object.entries(intensidadPorCreencia).sort((a,b)=>b[1].riesgo-a[1].riesgo).forEach(([dogma,dato])=>{
       if(dato.riesgo>=3 && CREENCIAS[dogma] && estado.creencias.length<3){
         estado.creencias.push(dogma); estado.detalleCreencias.push({dogma:dogma,eleccion:dato.eleccion});
       }
