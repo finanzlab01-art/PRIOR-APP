@@ -254,6 +254,19 @@ textarea:focus{border-color:var(--principal)}
 .biblioteca-item p{margin:0;color:var(--texto2)}
 .biblioteca-item .meta{font-size:12px;margin-top:10px}
 .biblioteca-vacia{padding:20px;border:1px dashed var(--borde);border-radius:12px;color:var(--texto2);margin-top:18px}
+.diagnostico-intro{margin:12px 0 18px;color:var(--texto2);font-size:14px}
+.escala-lista{display:flex;flex-direction:column;gap:0}
+.escala-item{padding:15px 0 13px;border-bottom:1px solid var(--arena)}
+.escala-item:last-child{border-bottom:0}
+.escala-enunciado{font-size:15px;line-height:1.45;font-weight:600;margin:0 0 12px}
+.escala-leyenda{display:flex;justify-content:space-between;gap:8px;color:var(--texto2);font-size:11px;line-height:1.3;margin-bottom:8px}
+.escala-puntos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;position:relative;gap:0;padding:0 5px}
+.escala-puntos:before{content:"";position:absolute;left:calc(10%);right:calc(10%);top:50%;height:2px;background:var(--arena);transform:translateY(-50%)}
+.escala-punto{position:relative;z-index:1;justify-self:center;width:34px;height:34px;border-radius:50%;border:2px solid var(--borde);background:var(--tarjeta);color:var(--texto2);font-size:13px;font-weight:600;padding:0;display:grid;place-items:center}
+.escala-punto[aria-pressed="true"]{border:3px solid var(--principal);background:var(--acento);color:#1B2A4A;transform:scale(1.08)}
+.escala-punto:focus-visible{outline:3px solid var(--cielo);outline-offset:3px}
+.escala-contador{font-size:13px;color:var(--texto2);margin:14px 0 0}
+@media(min-width:700px){.escala-item{padding:17px 0}.escala-enunciado{font-size:16px}}
 </style>
 </head>
 <body>
@@ -682,7 +695,7 @@ function bienvenida(){
   registrarPaso("bienvenida");
   const guia = el("div", {class:"guia"});
   const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
-    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{version:"v5"} });
+    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{version:"v6_escala"} });
     perfil(0); }}, "Empezar");
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
@@ -695,7 +708,7 @@ function bienvenida(){
   );
   escribir(guia, [
     {texto:"Hola. Antes de enseñarte algo, quiero ver cómo decides tú."},
-    {texto:`Primero, tres preguntas rápidas sobre ti. Después, ${ESCENARIOS.length} situaciones. No hay respuestas correctas: elige lo que harías de verdad.`}
+    {texto:`Primero, tres preguntas rápidas sobre ti. Después, 11 afirmaciones rápidas sobre cómo decides con tu dinero. No hay respuestas buenas ni malas.`}
   ], () => empezar.disabled = false);
 }
 
@@ -713,7 +726,7 @@ function perfil(n){
   escribir(guia, [{texto:q.pregunta, clase:"pregunta"}], () => {
     zona.replaceChildren(...q.opciones.map(txt => el("button", {class:"opcion", type:"button", onclick:() => {
       estado.perfil[q.clave] = txt;
-      n + 1 < PERFIL_PREGUNTAS.length ? perfil(n+1) : escenario();
+      n + 1 < PERFIL_PREGUNTAS.length ? perfil(n+1) : diagnosticoRapido();
     }}, el("span", {}, txt))));
     zona.classList.remove("oculto");
   });
@@ -721,106 +734,72 @@ function perfil(n){
 
 const plantilla = t => t.replace("{moneda}", MONEDA_TEXTO[estado.perfil.moneda] || "dólares");
 
-function escenario(){
-  registrarPaso(`situacion_${estado.i+1}`);
-  const base = ESCENARIOS[estado.i];
-  const s = base.variantes ? { ...base, ...base.variantes[grupoMoneda(estado.perfil.moneda)] } : base;
-  const guia = el("div", {class:"guia"});
-  const zona = el("div", {class:"opciones oculto"});
-  const conse = el("div", {class:"consecuencia oculto"});
-  const siguiente = el("button", {class:"btn", type:"button", disabled:true}, estado.i === ESCENARIOS.length-1 ? "Ver mi resultado" : "Siguiente");
-  siguiente.addEventListener("click", () => { estado.i++; estado.i < ESCENARIOS.length ? escenario() : resultado(); });
-
-  // Máximo posible en cada materia para la variante que vio esta persona.
-  const maximo = s.maximo || [0,1,2].map(k => Math.max(...s.opciones.map(o => o[2][k])));
-  maximo.forEach((v,k) => estado.maximos[k] += v);
-
-  pantalla(
-    el("div", {class:"marca"}, "PRIOR"),
-    horizonte(estado.i+1, ESCENARIOS.length),
-    el("div", {class:"bloque"}, s.bloque),
-    guia, zona, conse,
-    el("div", {class:"acciones"}, siguiente)
-  );
-
-  const sumar = (p, creenciaFuerte, eleccion) => {
-    p.forEach((v,k) => { estado.puntos[k] += v; if (v >= 2) estado.pesos[k]++; });
-    if (creenciaFuerte && !estado.creencias.includes(s.dogma)) {
-      estado.creencias.push(s.dogma);
-      estado.detalleCreencias.push({ dogma: s.dogma, eleccion });
+// Diagnóstico breve v6: 11 afirmaciones en una sola pantalla. Los escenarios pasan a las lecciones.
+const ITEMS_DIAGNOSTICO = [
+  {id:"D1", texto:"Prefiero guardar mis dólares en efectivo antes que buscar cómo generar rendimiento.", materia:2, dogma:"El efectivo en dólares es el refugio", invertida:false},
+  {id:"D2", texto:"Cuando sube el dólar, siento que debo convertir mis bolívares cuanto antes.", materia:2, dogma:"Cuando sube el dólar, hay que correr", invertida:false},
+  {id:"D3", texto:"Prefiero esperar a que la economía esté más estable antes de tomar decisiones con mi dinero.", materia:2, dogma:"Esperar es la mejor defensa", invertida:false},
+  {id:"D4", texto:"Tener el dinero disponible me da más tranquilidad que colocarlo en una opción que genere rendimiento.", materia:1, dogma:"El efectivo como refugio, o todo a una sola apuesta", invertida:false},
+  {id:"D5", texto:"Ahorrar en dólares es suficiente para proteger el valor de mi dinero con el paso del tiempo.", materia:0, dogma:"El efectivo en dólares es el refugio", invertida:false},
+  {id:"D6", texto:"Si alguien con experiencia me recomienda una inversión, suelo confiar en su criterio.", materia:1, dogma:"Si a otros les funciona, a mí también", invertida:false},
+  {id:"D7", texto:"Me parece demasiado arriesgado invertir si existe la posibilidad de perder parte del dinero.", materia:1, dogma:"Invertir es peligroso, o es copiar al que le va bien", invertida:false},
+  {id:"D8", texto:"Cuando una decisión financiera me funciona una vez, suelo repetirla sin volver a comparar alternativas.", materia:2, dogma:"Sé manejar mi dinero", invertida:false},
+  {id:"D9", texto:"Antes de decidir qué hacer con mi dinero, comparo lo que puede rendir con lo que suben los precios.", materia:0, dogma:"Sé manejar mi dinero", invertida:true},
+  {id:"D10", texto:"Tengo claro cómo repartir mi dinero entre distintas opciones para no depender de una sola.", materia:1, dogma:"El efectivo como refugio, o todo a una sola apuesta", invertida:true},
+  {id:"D11", texto:"Suelo revisar los datos y los costos antes de tomar una decisión financiera.", materia:0, dogma:"Gastar todo apenas cobras, por si acaso", invertida:true}
+];
+function diagnosticoRapido(){
+  registrarPaso("diagnostico_escala");
+  const respuestas = new Array(ITEMS_DIAGNOSTICO.length).fill(null);
+  const lista = el("div",{class:"escala-lista"});
+  const contador = el("p",{class:"escala-contador",role:"status"},"0 de 11 respondidas");
+  const boton = el("button",{class:"btn",type:"button",disabled:true},"Ver mi resultado");
+  const actualizar = () => {
+    const total = respuestas.filter(v=>v!==null).length;
+    contador.textContent = total + " de 11 respondidas";
+    boton.disabled = total !== ITEMS_DIAGNOSTICO.length;
+  };
+  ITEMS_DIAGNOSTICO.forEach((item,i)=>{
+    const puntos = el("div",{class:"escala-puntos",role:"group","aria-label":"Respuesta para afirmación " + (i+1)});
+    const fila = el("article",{class:"escala-item"},
+      el("p",{class:"escala-enunciado"},(i+1)+". "+item.texto),
+      el("div",{class:"escala-leyenda"},el("span",{},"Nada de acuerdo"),el("span",{},"Muy de acuerdo")),puntos);
+    for(let valor=1;valor<=5;valor++){
+      const p=el("button",{class:"escala-punto",type:"button","aria-pressed":"false","aria-label":valor+" de 5"},String(valor));
+      p.addEventListener("click",()=>{
+        respuestas[i]=valor;
+        [...puntos.children].forEach((n,k)=>n.setAttribute("aria-pressed",String(k+1===valor)));
+        actualizar();
+      });
+      puntos.append(p);
     }
-  };
-  // Sin juicio durante el test: al elegir solo se activa "Siguiente". Las consecuencias quedan guardadas para el diagnóstico final.
-  const continuar = (espera = reducido ? 250 : 650) => { siguiente.disabled = false; setTimeout(() => { if (siguiente.isConnected) siguiente.click(); }, espera); };
-  siguiente.classList.add("oculto");
-  const mostrarConse = (html) => { conse.innerHTML = html; conse.classList.remove("oculto"); siguiente.disabled = false; siguiente.focus({preventScroll:true}); conse.scrollIntoView({behavior: reducido ? "auto":"smooth", block:"nearest"}); };
-
-  const pintarOpciones = (destino, lista, alElegir) => {
-    destino.replaceChildren(...lista.map((txt, k) => {
-      const b = el("button", {class: txt === "Otra respuesta" ? "opcion otra" : "opcion", type:"button", "aria-pressed":"false"}, el("span",{class:"letra"}, LETRAS[k]), el("span",{}, txt));
-      b.addEventListener("click", () => {
-        destino.querySelectorAll(".opcion").forEach(o => { o.disabled = true; });
-        b.setAttribute("aria-pressed","true");
-        alElegir(k);
-      });
-      return b;
-    }));
-    destino.classList.remove("oculto");
-  };
-
-  // Respuesta abierta: no suma puntos ni cuenta para la mezcla; se guarda para armar arquetipos.
-  const otraRespuesta = () => {
-    const caja = el("div", {class:"abierta"});
-    const area = el("textarea", {placeholder:"Cuéntanos qué harías tú, con tus palabras.", "aria-label":"Tu respuesta"});
-    const guardar = el("button", {class:"btn secundario", type:"button", disabled:true}, "Guardar mi respuesta");
-    area.addEventListener("input", () => guardar.disabled = area.value.trim().length < 5);
-    guardar.addEventListener("click", () => {
-      maximo.forEach((v,k) => estado.maximos[k] -= v);
-      estado.respuestas.push({id:s.id, opcion:"otra", texto:area.value.trim()});
-      area.disabled = true; guardar.remove();
-      mostrarConse("<b>Gracias.</b> Con respuestas como la tuya descubrimos formas de decidir que todavía no tenemos en la app. Esta situación no cuenta para tu mezcla.");
-      continuar(reducido ? 1500 : 3500);
-    });
-    caja.append(area, guardar); zona.after(caja); area.focus({preventScroll:true});
-    caja.scrollIntoView({behavior: reducido ? "auto":"smooth", block:"nearest"});
-  };
-
-  escribir(guia, [{texto:plantilla(s.contexto)}, {texto:s.pregunta, clase:"pregunta"}], () => {
-    if (s.tipo !== "dos_pasos") {
-      pintarOpciones(zona, [...s.opciones.map(o => o[0]), "Otra respuesta"], k => {
-        if (k === s.opciones.length) return otraRespuesta();
-        const [texto, consecuencia, p] = s.opciones[k];
-        sumar(p, p[2] >= 3, texto);
-        estado.respuestas.push({id:s.id, opcion:LETRAS[k]});
-        continuar();
-      });
-    } else {
-      pintarOpciones(zona, s.paso1, r1 => {
-        setTimeout(() => {
-          const g2 = el("div", {class:"guia"});
-          zona.after(g2);
-          const zona2 = el("div", {class:"opciones oculto"});
-          g2.after(zona2);
-          escribir(g2, [{texto:s.pregunta2, clase:"pregunta"}], () => {
-            pintarOpciones(zona2, s.paso2, k => {
-              const acierta = r1 === s.correcta, nose = r1 === 3, adivina = k === 2;
-              let p, msg;
-              if (acierta && !adivina)      { p=[0,0,0]; msg="Tu confianza está calibrada."; }
-              else if (acierta && adivina)  { p=[0,1,1]; msg="Sabes más de lo que crees."; }
-              else if (nose || adivina)     { p=[0,3,0]; msg="Reconoces lo que no sabes: es un buen punto de partida."; }
-              else if (k === 0)             { p=[0,2,3]; msg="Estabas muy seguro de algo que no era así."; }
-              else                          { p=[0,2,2]; msg="Confiabas un poco más de lo que sabías."; }
-              sumar(p, p[2] >= 3, ELECCION_C3);
-              estado.respuestas.push({id:s.id, opcion:`${LETRAS[r1]}${LETRAS[k]}`});
-              continuar();
-            });
-          });
-        }, reducido ? 0 : 250);
-      });
-    }
+    lista.append(fila);
   });
+  boton.addEventListener("click",()=>{
+    estado.puntos=[0,0,0]; estado.maximos=[0,0,0]; estado.pesos=[0,0,0];
+    estado.respuestas=[]; estado.creencias=[]; estado.detalleCreencias=[];
+    const intensidadPorCreencia={};
+    ITEMS_DIAGNOSTICO.forEach((item,i)=>{
+      const riesgo=item.invertida ? 5-respuestas[i] : respuestas[i]-1;
+      estado.puntos[item.materia]+=riesgo;
+      estado.maximos[item.materia]+=4;
+      if(riesgo>=2) estado.pesos[item.materia]++;
+      estado.respuestas.push({id:item.id,valor:respuestas[i]});
+      if(!intensidadPorCreencia[item.dogma] || intensidadPorCreencia[item.dogma].riesgo<riesgo)
+        intensidadPorCreencia[item.dogma]={riesgo:riesgo,eleccion:item.texto};
+    });
+    Object.entries(intensidadPorCreencia).forEach(([dogma,dato])=>{
+      if(dato.riesgo>=3 && CREENCIAS[dogma] && estado.creencias.length<3){
+        estado.creencias.push(dogma); estado.detalleCreencias.push({dogma:dogma,eleccion:dato.eleccion});
+      }
+    });
+    resultado();
+  });
+  pantalla(el("div",{class:"marca"},"PRIOR"),
+    el("h1",{class:"titulo"},"¿Cómo piensas sobre tu dinero?"),
+    el("p",{class:"diagnostico-intro"},"Indica qué tan de acuerdo estás con cada afirmación. No hay respuestas buenas ni malas."),
+    lista,contador,el("div",{class:"acciones"},boton));
 }
-
 // Normaliza por el máximo que pudo sumar cada materia, aplica piso de 20% y redondea a 100.
 function calcularMezcla(puntos){
   const n = puntos.map((v,k) => estado.maximos[k] ? v / estado.maximos[k] : 0);
@@ -859,7 +838,7 @@ function resultado(){
     return f;
   });
   // Por qué: cuántas de las decisiones que contaron pesaron en la materia que sale primera.
-  const contaron = ESCENARIOS.length - estado.respuestas.filter(r => r.opcion === "otra").length;
+  const contaron = estado.respuestas.length;
   const n = estado.pesos[primera];
   const porque = n >= 2 ? POR_QUE[primera].con.replace("{N}", n).replace("{T}", contaron) : POR_QUE[primera].sin;
 
