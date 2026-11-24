@@ -20,8 +20,8 @@ Lema: "El futuro se practica." Subtítulo: "Equivócate aquí. Acierta afuera."
   `cuenta`, `cuenta_creada` o `sin_cuenta`. La cuenta se pide al terminar la lección 1, no antes.
 
 ## Cómo funciona hoy
-- Mini perfil (edad, moneda de ingresos y fondo de emergencia) y diagnóstico v5: 11 situaciones, con opción
-  E "Otra respuesta" (texto libre que no cuenta para la mezcla).
+- Mini perfil (edad, moneda de ingresos y fondo de emergencia) y diagnóstico v6: 11 afirmaciones en una escala
+  de cinco niveles. Las respuestas se guardan como parte del resultado del diagnóstico.
 - El diagnóstico es un test: al elegir no se muestra ninguna consecuencia ni si acertó;
   pasa solo a la siguiente situación. La interpretación de las decisiones va al final.
 - Resultado: mezcla de las tres materias (piso de 20%) y creencias a revisar.
@@ -50,6 +50,7 @@ persona decidió mal. (Cambio del 18 nov 2026: antes la voz era de lenguaje simp
 ## Reglas de trabajo
 - Antes de editar, explica tu plan y espera mi confirmación.
 - Una tarea por sesión. No toques nada fuera de lo pedido.
+- No afirmes que se enviarán notificaciones automáticas si no existe un sistema de notificaciones conectado; el interés por la lección 2 se marca localmente y se informa con transparencia.
 - Móvil primero (pantallas de unos 380 px). Pocos toques: no agregues botones innecesarios.
 - Liviano (datos móviles caros en Venezuela): nada de videos ni imágenes pesadas;
   ilustraciones en SVG dentro del archivo. Animaciones con CSS/SVG; respetar prefers-reduced-motion.
