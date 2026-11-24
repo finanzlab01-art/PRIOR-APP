@@ -738,7 +738,7 @@ function bienvenida(){
   registrarPaso("bienvenida");
   const guia = el("div", {class:"guia"});
   const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
-    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{version:"v6_escala"} });
+    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{version:"v6_escala"}, diagGuardado:false, diagGuardando:null, diagError:null });
     perfil(0); }}, "Empezar");
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
@@ -941,7 +941,7 @@ function cuenta(){
     usuario = data.session.user;
     registrarPaso("cuenta_creada");
     await guardarDiagnostico();
-    if (!L.guardada) { L.guardada = true; await guardarLeccion(); }
+    if (!L.guardada) await guardarLeccion();
     cierre();
   };
   crear.addEventListener("click", () => enviar("crear"));
@@ -1417,7 +1417,7 @@ function final(){
   registrarPaso("leccion_intro");
   const guia = el("div", {class:"guia"});
   const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
-    L.paso = 0; L.criterio = 0; L.desglose = []; L.datos = {}; L.otorgado = new Set(); L.conceptos = []; L.inicio = Date.now(); PANTALLAS[0](); }}, "Empezar la lección");
+    L.paso = 0; L.criterio = 0; L.desglose = []; L.datos = {}; L.otorgado = new Set(); L.conceptos = []; L.guardada = false; L.guardando = null; L.guardadoError = null; L.inicio = Date.now(); PANTALLAS[0](); }}, "Empezar la lección");
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
     el("h1", {class:"titulo"}, "Tu primera lección: Tasas, bancos y tu bolívar"),
