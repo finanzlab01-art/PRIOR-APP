@@ -2,12 +2,13 @@ import { test, expect } from '@playwright/test';
 
 async function installSupabaseStub(page, { authenticated = false, failFirstDiagnostic = false } = {}) {
   const user = { id: '00000000-0000-4000-8000-000000000001', email: 'prueba@prior.test' };
+  const session = authenticated ? { user } : null;
   const source = `
     window.__priorDb = { attempts: [], successes: [] };
     window.supabase = {
       createClient: () => ({
         auth: {
-          getSession: async () => ({ data: { session: ${authenticated ? '{ user }' : 'null'} }, error: null }),
+          getSession: async () => ({ data: { session: ${JSON.stringify(session)} }, error: null }),
           onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
           signOut: async () => ({ error: null })
         },
