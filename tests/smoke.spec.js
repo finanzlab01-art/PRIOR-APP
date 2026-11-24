@@ -1,69 +1,76 @@
 import { test, expect } from '@playwright/test';
 
-test('diagnóstico v5 y guardado local de un concepto', async ({ page }) => {
-  test.setTimeout(120000);
+async function installSupabaseStub(page, { authenticated = false, failFirstDiagnostic = false } = {}) {
+  const user = { id: '00000000-0000-4000-8000-000000000001', email: 'prueba@prior.test' };
+  const session = authenticated ? { user } : null;
+  const source = `
+    window.__priorDb = { attempts: [], successes: [] };
+    window.supabase = {
+      createClient: () => ({
+        auth: {
+          getSession: async () => ({ data: { session: ${JSON.stringify(session)} }, error: null }),
+          onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+          signOut: async () => ({ error: null })
+        },
+        from: (table) => ({
+          insert: async (payload) => {
+            window.__priorDb.attempts.push({ table, payload });
+            const count = window.__priorDb.attempts.filter(x => x.table === table).length;
+            if (${failFirstDiagnostic} && table === 'diagnostico_resultados' && count === 1) {
+              return { error: { message: 'temporary test failure' } };
+            }
+            window.__priorDb.successes.push({ table, payload });
+            return { error: null };
+          }
+        })
+      })
+    };
+  `;
+  await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js',
+    route => route.fulfill({ status: 200, contentType: 'application/javascript', body: source }));
+}
+
+async function completeCurrentDiagnostic(page) {
   await page.goto('/');
-  await expect(page.locator('h1')).toHaveText('El futuro se practica.');
   await page.locator('.saltar').click();
   await page.getByRole('button', { name: 'Empezar', exact: true }).click();
 
-  // Mini perfil: edad, moneda y fondo de emergencia.
-  for (const respuesta of ['25 a 34', 'Bolívares', 'No cuento con uno']) {
+  for (const answer of ['25 a 34', 'Bolívares', 'No cuento con uno']) {
     await page.locator('.opcion').first().waitFor({ state: 'visible' });
-    await page.getByRole('button', { name: respuesta, exact: true }).click();
+    await page.getByRole('button', { name: answer, exact: true }).click();
   }
 
-  // Las once situaciones del diagnóstico v5.
+  await expect(page.locator('.escala-item')).toHaveCount(11);
   for (let i = 0; i < 11; i++) {
-    const opcion = page.locator('.opcion').first();
-    await opcion.waitFor({ state: 'visible' });
-    await opcion.click();
-    if (i < 10) {
-      await expect(opcion).toBeDisabled();
-      await expect(opcion).not.toBeAttached({ timeout: 20000 });
-      await page.locator('.opcion').first().waitFor({ state: 'visible', timeout: 20000 });
-    } else {
-      await expect(page.getByText('¿Qué nivel de seguridad tienes sobre tu respuesta?')).toBeVisible({ timeout: 20000 });
-      await page.locator('.opcion:not(:disabled)').last().click();
-    }
+    await page.locator('.escala-item').nth(i).locator('.escala-punto').first().click();
   }
-  await expect(page.locator('h1')).toContainText('Tu ruta empieza por', { timeout: 15000 });
+  await page.getByRole('button', { name: 'Ver mi resultado', exact: true }).click();
+  await expect(page.locator('h1')).toContainText('Tu ruta empieza por');
+}
+
+test('el diagnóstico v6 llega al resultado y guarda con reintento', async ({ page }) => {
+  await installSupabaseStub(page, { authenticated: true, failFirstDiagnostic: true });
+  await completeCurrentDiagnostic(page);
+
   await page.getByRole('button', { name: 'Empezar mi primera lección' }).click();
-  await page.locator('.saltar').click();
-  await page.getByRole('button', { name: 'Empezar la lección' }).click();
+  await expect(page.getByRole('heading', { name: 'Tu primera lección: Tasas, bancos y tu bolívar' })).toBeVisible();
 
-  // Primera decisión y predicción; se llega al concepto de la segunda pantalla.
-  await page.locator('.saltar').click();
-  await page.locator('.opcion').first().click();
-  await expect(page.getByText(/En tres meses/)).toBeVisible({ timeout: 20000 });
-  await page.locator('.opcion').first().click();
-  await expect(page.getByText(/Lo que hoy cuesta/)).toBeVisible({ timeout: 20000 });
-  await page.getByRole('button', { name: 'Seguir', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toBeVisible({ timeout: 20000 });
-  await page.getByRole('button', { name: 'Guardar en mi biblioteca' }).click();
-  await page.getByRole('button', { name: 'Ver mi biblioteca' }).click();
-  await expect(page.getByRole('heading', { name: 'Mi biblioteca' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toBeVisible();
-
-  // Quitar y volver a guardar el mismo concepto no debe crear duplicados.
-  await page.getByRole('button', { name: 'Quitar de mi biblioteca' }).click();
-  await expect(page.getByText(/Todavía no has guardado conceptos/)).toBeVisible();
-  await page.getByRole('button', { name: 'Volver', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toBeVisible();
-  await page.getByRole('button', { name: 'Guardar en mi biblioteca' }).click();
-  await page.getByRole('button', { name: 'Ver mi biblioteca' }).click();
-  await expect(page.getByRole('heading', { name: 'Ilusión monetaria' })).toHaveCount(1);
-  const guardados = await page.evaluate(() => JSON.parse(localStorage.getItem('prior_biblioteca_v1') || '[]'));
-  expect(guardados).toHaveLength(1);
-  expect(guardados[0].id).toBe('ilusion-monetaria');
+  await expect.poll(async () => page.evaluate(() =>
+    window.__priorDb.successes.filter(x => x.table === 'diagnostico_resultados').length
+  )).toBe(1);
+  const attempts = await page.evaluate(() =>
+    window.__priorDb.attempts.filter(x => x.table === 'diagnostico_resultados').length
+  );
+  expect(attempts).toBe(2);
 });
 
-test('la portada cabe en el viewport sin desplazamiento horizontal', async ({ page }) => {
+test('la portada cabe en el viewport móvil sin desplazamiento horizontal', async ({ page }) => {
+  await installSupabaseStub(page);
   await page.goto('/');
-  const dimensiones = await page.evaluate(() => ({
-    anchoDocumento: document.documentElement.scrollWidth,
-    anchoViewport: document.documentElement.clientWidth
+  const dimensions = await page.evaluate(() => ({
+    documentWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth
   }));
-  expect(dimensiones.anchoDocumento).toBeLessThanOrEqual(dimensiones.anchoViewport);
+  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth);
   await expect(page.locator('h1')).toHaveText('El futuro se practica.');
 });

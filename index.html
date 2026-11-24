@@ -466,8 +466,8 @@ function registrarPaso(paso, intento = 1){
   pasosEnCamino.add(paso);
   const fallo = (motivo) => {
     pasosEnCamino.delete(paso);
-    if (intento === 1) setTimeout(() => registrarPaso(paso, 2), 3000);
-    else console.error("No se registró el paso:", motivo);
+    if (intento < 3) setTimeout(() => registrarPaso(paso, intento + 1), 1000 * intento);
+    else console.error("No se registró el paso tras 3 intentos:", motivo);
   };
   sb.from("visitas_pasos").insert({ visita: VISITA, paso, invitado_por: REF ? REF.slice(0, 20) : null })
     .then(({ error }) => {
@@ -490,23 +490,66 @@ const traducirError = (m="") =>
   "No se pudo completar. Inténtalo otra vez.";
 
 async function guardarDiagnostico(){
-  if (!sb || !usuario || estado.diagGuardado) return;
-  estado.diagGuardado = true;
-  const { error } = await sb.from("diagnostico_resultados").insert({
+  if (!sb || !usuario) return false;
+  if (estado.diagGuardado) return true;
+  if (estado.diagGuardando) return estado.diagGuardando;
+  const payload = {
     user_id: usuario.id, correo: usuario.email, perfil: estado.perfil, respuestas: estado.respuestas,
-    puntos: estado.puntos, maximos: estado.maximos, mezcla: estado.mezcla, creencias: estado.creencias, invitado_por: REF });
-  if (error) console.error("No se guardó el diagnóstico:", error.message);
+    puntos: estado.puntos, maximos: estado.maximos, mezcla: estado.mezcla, creencias: estado.creencias, invitado_por: REF
+  };
+  estado.diagGuardando = (async () => {
+    let ultimoError = null;
+    for (let intento = 1; intento <= 3; intento++) {
+      try {
+        const { error } = await sb.from("diagnostico_resultados").insert(payload);
+        if (!error) {
+          estado.diagGuardado = true;
+          estado.diagError = null;
+          return true;
+        }
+        ultimoError = error;
+      } catch (error) { ultimoError = error; }
+      if (intento < 3) await new Promise(resolve => setTimeout(resolve, 500 * intento));
+    }
+    estado.diagError = ultimoError?.message || "No se pudo guardar el diagnóstico.";
+    console.error("No se guardó el diagnóstico tras 3 intentos:", estado.diagError);
+    return false;
+  })();
+  try { return await estado.diagGuardando; }
+  finally { estado.diagGuardando = null; }
 }
 async function guardarLeccion(){
-  if (!sb || !usuario) return;
-  const { error } = await sb.from("leccion_resultados").insert({
+  if (!sb || !usuario) return false;
+  if (L.guardada) return true;
+  if (L.guardando) return L.guardando;
+  const payload = {
     user_id: usuario.id, correo: usuario.email, leccion: "E1", criterio: L.criterio, desglose: L.desglose,
-    datos: L.datos, duracion_seg: Math.round((Date.now() - (L.inicio || Date.now())) / 1000) });
-  if (error) console.error("No se guardó la lección:", error.message);
+    datos: L.datos, duracion_seg: Math.round((Date.now() - (L.inicio || Date.now())) / 1000)
+  };
+  L.guardando = (async () => {
+    let ultimoError = null;
+    for (let intento = 1; intento <= 3; intento++) {
+      try {
+        const { error } = await sb.from("leccion_resultados").insert(payload);
+        if (!error) {
+          L.guardada = true;
+          L.guardadoError = null;
+          return true;
+        }
+        ultimoError = error;
+      } catch (error) { ultimoError = error; }
+      if (intento < 3) await new Promise(resolve => setTimeout(resolve, 500 * intento));
+    }
+    L.guardadoError = ultimoError?.message || "No se pudo guardar la lección.";
+    console.error("No se guardó la lección tras 3 intentos:", L.guardadoError);
+    return false;
+  })();
+  try { return await L.guardando; }
+  finally { L.guardando = null; }
 }
 
 /* ---------- Estado ---------- */
-const estado = { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{} };
+const estado = { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{}, diagGuardado:false, diagGuardando:null, diagError:null };
 const app = document.getElementById("app");
 const reducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const CLAVE_BIBLIOTECA = "prior_biblioteca_v1";
@@ -695,7 +738,7 @@ function bienvenida(){
   registrarPaso("bienvenida");
   const guia = el("div", {class:"guia"});
   const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
-    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{version:"v6_escala"} });
+    Object.assign(estado, { i:0, puntos:[0,0,0], maximos:[0,0,0], respuestas:[], creencias:[], detalleCreencias:[], pesos:[0,0,0], perfil:{version:"v6_escala"}, diagGuardado:false, diagGuardando:null, diagError:null });
     perfil(0); }}, "Empezar");
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
@@ -868,8 +911,11 @@ function resultado(){
 
 // La cuenta ya no se pide antes de la lección: quien ya tiene sesión guarda su diagnóstico aquí;
 // quien no la tiene, empieza la lección y se le ofrece guardar al terminarla.
-function irALeccion(){
-  if (usuario) { registrarPaso("con_sesion"); guardarDiagnostico(); }
+async function irALeccion(){
+  if (usuario) {
+    registrarPaso("con_sesion");
+    await guardarDiagnostico();
+  }
   final();
 }
 
@@ -895,7 +941,7 @@ function cuenta(){
     usuario = data.session.user;
     registrarPaso("cuenta_creada");
     await guardarDiagnostico();
-    if (!L.guardada) { L.guardada = true; await guardarLeccion(); }
+    if (!L.guardada) await guardarLeccion();
     cierre();
   };
   crear.addEventListener("click", () => enviar("crear"));
@@ -1287,20 +1333,32 @@ const PANTALLAS = [
 // Heurística solo para la demo: en la vuelta 1 Carmen juzga el diario a mano.
 function esConcreta(t){ return t.length >= 25 && /(hoy|mañana|lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo|semana|día|dia|quincena|cobro|cuando)/i.test(t); }
 
-function cierre(){
+async function cierre(){
   registrarPaso("leccion_fin");
   L.zona = null;
   const t = L.datos.m5_texto || "";
   if (esConcreta(t)) ganar("m5", 3, "una decisión concreta para tu vida");
   else ganar("m5", 1, "escribiste tu decisión");
-  if (usuario && !L.guardada) { L.guardada = true; guardarLeccion(); }
+  const guardadoDiagnostico = usuario ? await guardarDiagnostico() : null;
+  const guardadoLeccion = usuario ? await guardarLeccion() : null;
   const resp = el("p", {class:"aviso-demo", role:"status"});
-  const pedir = (si) => { L.datos.pide_leccion_2 = si; resp.textContent = si ? "Listo: te avisamos cuando esté la lección 2." : "Está bien. Aquí estará cuando quieras volver."; };
+  const estadoGuardado = usuario && (!guardadoDiagnostico || !guardadoLeccion)
+    ? el("div", {class:"tarjeta", role:"status"},
+        el("p", {}, "Tu lección terminó, pero todavía no pudimos confirmar que todos tus resultados estén guardados."),
+        el("button", {class:"btn secundario", type:"button", onclick:async (e) => {
+          e.currentTarget.disabled = true;
+          const d = await guardarDiagnostico(), l = await guardarLeccion();
+          e.currentTarget.disabled = false;
+          e.currentTarget.textContent = d && l ? "Resultados guardados" : "Reintentar guardado";
+          if (d && l) estadoGuardado.querySelector("p").textContent = "Tus resultados ya están guardados en tu cuenta.";
+        }}, "Reintentar guardado"))
+    : null;
   pantalla(
     el("div", {class:"cabecera"}, el("span", {class:"marca"}, "PRIOR"), el("span", {class:"criterio-total"}, `${L.criterio} Criterio`)),
     el("h1", {class:"titulo"}, `Ganaste ${L.criterio} de 15 de Criterio`),
     el("p", {class:"sublema"}, "Aquí no se premia acertar: se premia razonar."),
     L.conceptos.length ? el("p", {}, el("b", {}, "Hoy aprendiste: "), L.conceptos.map(c => c[0]).join(", ")) : null,
+    estadoGuardado,
     t ? el("h2", {class:"subtitulo"}, "Tu decisión de esta semana") : null,
     t ? el("div", {class:"tarjeta"}, el("p", {}, `“${t}”`)) : null,
     usuario || L.rechazoCuenta ? null : el("div", {class:"tarjeta"},
@@ -1315,10 +1373,13 @@ function cierre(){
       return el("div", {class:"tarjeta"}, el("p", {}, "Tu código"), el("div", {class:"codigo"}, usuario.id.slice(0,8).toUpperCase()), el("div", {style:"margin-top:12px"}, copiar));
     })() : null,
     avisoInstalar(),
-    el("p", {class:"pregunta-chica"}, "¿Quieres la lección 2 cuando esté lista?"),
+    el("p", {class:"pregunta-chica"}, "¿Te interesa continuar cuando publiquemos la lección 2?"),
+    el("p", {class:"nota"}, "Todavía no enviamos notificaciones automáticas. Puedes marcar tu interés en este dispositivo."),
     el("div", {class:"acciones"},
-      el("button", {class:"btn", type:"button", onclick:() => pedir(true)}, "Sí, avísame"),
-      el("button", {class:"btn secundario", type:"button", onclick:() => pedir(false)}, "Ahora no"),
+      el("button", {class:"btn", type:"button", onclick:() => {
+        try { localStorage.setItem("prior_interes_leccion_2", "si"); } catch {}
+        resp.textContent = "Interés guardado en este dispositivo.";
+      }}, "Marcar que me interesa"),
       resp,
       el("button", {class:"btn texto", type:"button", onclick:bienvenida}, "Volver al inicio"))
   );
@@ -1355,7 +1416,7 @@ function final(){
   registrarPaso("leccion_intro");
   const guia = el("div", {class:"guia"});
   const empezar = el("button", {class:"btn", type:"button", disabled:true, onclick:() => {
-    L.paso = 0; L.criterio = 0; L.desglose = []; L.datos = {}; L.otorgado = new Set(); L.conceptos = []; L.inicio = Date.now(); PANTALLAS[0](); }}, "Empezar la lección");
+    L.paso = 0; L.criterio = 0; L.desglose = []; L.datos = {}; L.otorgado = new Set(); L.conceptos = []; L.guardada = false; L.guardando = null; L.guardadoError = null; L.inicio = Date.now(); PANTALLAS[0](); }}, "Empezar la lección");
   pantalla(
     el("div", {class:"marca"}, "PRIOR"),
     el("h1", {class:"titulo"}, "Tu primera lección: Tasas, bancos y tu bolívar"),
