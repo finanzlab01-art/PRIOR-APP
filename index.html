@@ -1353,7 +1353,6 @@ async function cierre(){
           if (d && l) estadoGuardado.querySelector("p").textContent = "Tus resultados ya están guardados en tu cuenta.";
         }}, "Reintentar guardado"))
     : null;
-  const pedir = (si) => { L.datos.pide_leccion_2 = si; resp.textContent = si ? "Listo: te avisamos cuando esté la lección 2." : "Está bien. Aquí estará cuando quieras volver."; };
   pantalla(
     el("div", {class:"cabecera"}, el("span", {class:"marca"}, "PRIOR"), el("span", {class:"criterio-total"}, `${L.criterio} Criterio`)),
     el("h1", {class:"titulo"}, `Ganaste ${L.criterio} de 15 de Criterio`),
